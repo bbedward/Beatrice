@@ -223,7 +223,7 @@ async def meme(ctx):
     if meme is None:
         await post_response(message, "There are no memes! Add some with !addmeme")
         return
-    embed = discord.Embed(colour=discord.Colour.purple())
+    embed = discord.Embed(colour=discord.Colour.green())
     embed.title = "Meme #{0} - {1}".format(meme['id'], meme['title'])
     embed.set_author(name=meme['author'])
     embed.set_image(url=meme['url'])
@@ -278,7 +278,7 @@ async def meow(ctx):
     if meow is None:
         await post_response(message, "There are no meows! Add some with !addmeow")
         return
-    embed = discord.Embed(colour=discord.Colour.purple())
+    embed = discord.Embed(colour=discord.Colour.orange())
     embed.title = "Meow #{0} - {1}".format(meow['id'], meow['title'])
     embed.set_author(name=meow['author'])
     embed.set_image(url=meow['url'])
@@ -333,7 +333,7 @@ async def pup(ctx):
     if pup is None:
         await post_response(message, "There are no pups! Add some with !addpup")
         return
-    embed = discord.Embed(colour=discord.Colour.purple())
+    embed = discord.Embed(colour=discord.Colour.blue())
     embed.title = "Pup #{0} - {1}".format(pup['id'], pup['title'])
     embed.set_author(name=pup['author'])
     embed.set_image(url=pup['url'])
