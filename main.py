@@ -225,7 +225,7 @@ async def meme(ctx):
         return
     embed = discord.Embed(colour=discord.Colour.purple())
     embed.title = "Meme #{0} - ${1}".format(meme['id'], meme['title'])
-    embed.set_author(meme['author'])
+    embed.set_author(name=meme['author'])
     embed.set_image(url=meme['url'])
     await message.channel.send(embed=embed)
 
@@ -280,7 +280,7 @@ async def meow(ctx):
         return
     embed = discord.Embed(colour=discord.Colour.purple())
     embed.title = "Meow #{0} - ${1}".format(meow['id'], meow['title'])
-    embed.set_author(meow['author'])
+    embed.set_author(name=meow['author'])
     embed.set_image(url=meow['url'])
     await message.channel.send(embed=embed)
 
@@ -335,7 +335,7 @@ async def pup(ctx):
         return
     embed = discord.Embed(colour=discord.Colour.purple())
     embed.title = "Pup #{0} - ${1}".format(pup['id'], pup['title'])
-    embed.set_author(pup['author'])
+    embed.set_author(name=pup['author'])
     embed.set_image(url=pup['url'])
     await message.channel.send(embed=embed)
 
