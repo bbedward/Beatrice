@@ -80,7 +80,7 @@ def get_meows():
 
 def get_next_meme():
     sequence = get_meme_sequence()
-    meme = Meme.select().order_by(Meme.created_at.desc()).offset(sequence).limit(1)
+    meme = Meme.select().order_by(Meme.created_at.desc()).offset(sequence - 1).limit(1)
     if meme.count() == 0:
         return None
     meme = meme.get()
@@ -88,7 +88,7 @@ def get_next_meme():
 
 def get_next_pup():
     sequence = get_pup_sequence()
-    pup = Pup.select().order_by(Pup.created_at.desc()).offset(sequence).limit(1)
+    pup = Pup.select().order_by(Pup.created_at.desc()).offset(sequence - 1).limit(1)
     if pup.count() == 0:
         return None
     pup = pup.get()
@@ -96,7 +96,7 @@ def get_next_pup():
 
 def get_next_meow():
     sequence = get_meow_sequence()
-    meow = Meow.select().order_by(Meow.created_at.desc()).offset(sequence).limit(1)
+    meow = Meow.select().order_by(Meow.created_at.desc()).offset(sequence - 1).limit(1)
     if meow.count() == 0:
         return None
     meow = meow.get()
