@@ -229,7 +229,7 @@ async def meme(ctx):
     embed.set_image(url=meme['url'])
     await message.channel.send(embed=embed)
 
-@client.command()
+@client.command(aliases=["memes"])
 async def memelist(ctx):
     message = ctx.message
     memes = db.get_memes()
@@ -284,7 +284,7 @@ async def meow(ctx):
     embed.set_image(url=meow['url'])
     await message.channel.send(embed=embed)
 
-@client.command()
+@client.command(aliases=["meows"])
 async def meowlist(ctx):
     message = ctx.message
     meows = db.get_meows()
@@ -339,7 +339,7 @@ async def pup(ctx):
     embed.set_image(url=pup['url'])
     await message.channel.send(embed=embed)
 
-@client.command()
+@client.command(aliases=["pups"])
 async def puplist(ctx):
     message = ctx.message
     pups = db.get_pups()
@@ -371,14 +371,16 @@ async def puplist(ctx):
 ### Admin Commands
 
 @client.command()
-async def addmeme(ctx, url: str):
+async def addmeme(ctx, url: str = None, author: str = None, title: str = None):
     message = ctx.message
     if not is_admin(message.author):
         return
+    elif url is None or author is None or title is None:
+        await post_usage(message, ADDMEME)
     elif not valid_url(url):
         await message.author.send("Invalid URL. Valid urls begin with http:// or https://")
-    elif db.add_meme(url):
-        await message.author.send("Meme {0} added".format(url))
+    elif db.add_meme(url, author, title):
+        await message.author.send("Meme added: {0}".format(title))
     else:
         await message.author.send("Could not add meme {0}. It may already exist".format(url))
     
@@ -386,23 +388,25 @@ async def addmeme(ctx, url: str):
 async def removememe(ctx, id: str):
     message = ctx.message
     if not is_admin(message.author):
-        return
+        returrm n
     elif db.remove_meme(id):
         await message.author.send("Meme {0} removed".format(id))
     else:
         await message.author.send("Could not remove meme {0}. It may not exist".format(id))
 
 @client.command()
-async def addpup(ctx, url: str):
+async def addpup(ctx, url: str = None, author: str = None, title: str = None):
     message = ctx.message
     if not is_admin(message.author):
         return
+    elif url is None or author is None or title is None:
+        await post_usage(message, ADDPUP)
     elif not valid_url(url):
         await message.author.send("Invalid URL. Valid urls begin with http:// or https://")
-    elif db.add_pup(url):
-        await message.author.send("Pup {0} added".format(url))
+    elif db.add_pup(url, author, title):
+        await message.author.send("Pup added: {0}".format(title))
     else:
-        await message.author.send("Could not add pup {0}. It may already exist".format(url))
+        await message.author.send("Could not add Pup {0}. It may already exist".format(url))
     
 @client.command()
 async def removepup(ctx, id: str):
@@ -413,6 +417,30 @@ async def removepup(ctx, id: str):
         await message.author.send("Pup {0} removed".format(id))
     else:
         await message.author.send("Could not Remove pup {0}. It may not exist".format(id))
+
+@client.command()
+async def addmeow(ctx, url: str = None, author: str = None, title: str = None):
+    message = ctx.message
+    if not is_admin(message.author):
+        return
+    elif url is None or author is None or title is None:
+        await post_usage(message, ADDMEOW)
+    elif not valid_url(url):
+        await message.author.send("Invalid URL. Valid urls begin with http:// or https://")
+    elif db.add_meow(url, author, title):
+        await message.author.send("Meow added: {0}".format(title))
+    else:
+        await message.author.send("Could not add meow {0}. It may already exist".format(url))
+    
+@client.command()
+async def removemeow(ctx, id: str):
+    message = ctx.message
+    if not is_admin(message.author):
+        return
+    elif db.remove_meow(id):
+        await message.author.send("Meow {0} removed".format(id))
+    else:
+        await message.author.send("Could not remove meow {0}. It may not exist".format(id))
 
 ### Re-Used Discord Functions
 async def post_response(message, template, *args):
