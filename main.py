@@ -54,15 +54,33 @@ PUPLIST = {
         "INFO"     : "Receive private message with a list of all pups stored with the bot"
 }
 
+MEOW = {
+		"CMD"      : "{0}meow".format(COMMAND_PREFIX),
+        "INFO"     : "Display next meow in sequence"
+}
+
+MEOWLIST = {
+		"CMD"      : "{0}meowlist".format(COMMAND_PREFIX),
+        "INFO"     : "Receive private message with a list of all meows stored with the bot"
+}
+
 ### Admin commands
 ADDPUP = {
-		"CMD"      : "{0}addpup, takes: url".format(COMMAND_PREFIX),
-        "INFO"     : "Add URL to the bot's pup list"
+		"CMD"      : "{0}addpup, takes: url, author, title".format(COMMAND_PREFIX),
+        "INFO"     : "Add URL to the bot's pup list",
+        "USAGE"    : "{0}addpup <url> <author> <title>".format(COMMAND_PREFIX)
 }
 
 ADDMEME = {
-   		"CMD"      : "{0}addmeme, takes: url".format(COMMAND_PREFIX),
-        "INFO"     : "Add URL to the bot's meme list" 
+   		"CMD"      : "{0}addmeme, takes: url, author, title".format(COMMAND_PREFIX),
+        "INFO"     : "Add URL to the bot's meme list",
+        "USAGE"    : "{0}addmeme <url> <author> <title>".format(COMMAND_PREFIX)
+}
+
+ADDMEOW = {
+   		"CMD"      : "{0}addmeow, takes: url, author, title".format(COMMAND_PREFIX),
+        "INFO"     : "Add URL to the bot's meow list",
+        "USAGE"    : "{0}addmeow <url> <author> <title>".format(COMMAND_PREFIX)
 }
 
 REMOVEPUP = {
@@ -75,10 +93,15 @@ REMOVEMEME = {
         "INFO"     : "Remove meme matching URL or ID from the bot's meme list" 
 }
 
+REMOVEMEOW = {
+   		"CMD"      : "{0}removemeow, takes: url or id".format(COMMAND_PREFIX),
+        "INFO"     : "Remove meow matching URL or ID from the bot's meow list" 
+}
+
 ### Dictionary of different command categories
 COMMANDS = {
-		"USER_COMMANDS"          : [PRICE, MEME, MEMELIST, PUP, PUPLIST],
-        "ADMIN_COMMANDS"         : [ADDPUP, ADDMEME, REMOVEPUP, REMOVEMEME],
+		"USER_COMMANDS"          : [PRICE, MEME, MEMELIST, PUP, PUPLIST, MEOW, MEOWLIST],
+        "ADMIN_COMMANDS"         : [ADDPUP, ADDMEME, ADDMEOW, REMOVEPUP, REMOVEMEME, REMOVEMEOW],
 }
 
 # Create discord client
@@ -90,17 +113,20 @@ initial_ts=datetime.datetime.now() - datetime.timedelta(seconds=SPAM_THRESHOLD)
 last_price = {}
 last_meme = {}
 last_pup = {}
+last_meow = {}
 def create_spam_dicts():
     """map every channel the client can see to datetime objects
         this way we can have channel-specific spam prevention"""
     global last_price
     global last_meme
     global last_pup
+    global last_meow
     for c in client.get_all_channels():
         if not is_private(c):
             last_price[c.id] = initial_ts
             last_meme[c.id] = initial_ts
             last_pup[c.id] = initial_ts
+            last_meow[c.id] = initial_ts
 
 @client.event
 async def on_ready():
@@ -198,7 +224,8 @@ async def meme(ctx):
         await post_response(message, "There are no memes! Add some with !addmeme")
         return
     embed = discord.Embed(colour=discord.Colour.purple())
-    embed.title = "Meme {0}".format(meme['id'])
+    embed.title = "Meme #{0} - ${1}".format(meme['id'], meme['title'])
+    embed.author = meme['author']
     embed.set_image(url=meme['url'])
     await message.channel.send(embed=embed)
 
@@ -217,6 +244,61 @@ async def memelist(ctx):
     entries = []
     for meme in memes:
         entries.append(paginator.Entry(str(meme['id']),meme['url']))
+
+    # Do paginator for favorites > 10
+    if len(entries) > 10:
+        pages = paginator.Paginator.format_pages(entries=entries,title=title,description=description)
+        p = paginator.Paginator(client,message=message,page_list=pages,as_dm=True)
+        await p.paginate(start_page=1)
+    else:
+        embed = discord.Embed(colour=discord.Colour.teal())
+        embed.title = title
+        embed.description = description
+        for e in entries:
+            embed.add_field(name=e.name,value=e.value,inline=False)
+    await message.author.send(embed=embed)
+
+@client.command()
+async def meow(ctx):
+    message = ctx.message
+    if is_private(message.channel):
+        return
+    elif message.channel.id in settings.no_spam_channels:
+        return
+	# Check spam
+    global last_meow
+    if message.channel.id not in last_meow:
+        last_meow[message.channel.id] = datetime.datetime.now()
+    tdelta = datetime.datetime.now() - last_meow[message.channel.id]
+    if SPAM_THRESHOLD > tdelta.seconds:
+        await post_response(message, "No more meows for {0} seconds", (SPAM_THRESHOLD - tdelta.seconds))
+        return
+    last_meow[message.channel.id] = datetime.datetime.now()
+    meow = db.get_next_meow()
+    if meow is None:
+        await post_response(message, "There are no meows! Add some with !addmeow")
+        return
+    embed = discord.Embed(colour=discord.Colour.purple())
+    embed.title = "Meow #{0} - ${1}".format(meow['id'], meow['title'])
+    embed.author = meow['author']
+    embed.set_image(url=meow['url'])
+    await message.channel.send(embed=embed)
+
+@client.command()
+async def meowlist(ctx):
+    message = ctx.message
+    meows = db.get_meows()
+    if len(meows) == 0:
+        embed = discord.Embed(colour=discord.Colour.red())
+        embed.title="No Meows"
+        embed.description="There no meows. Add meows with `{0}addmeow`".format(COMMAND_PREFIX)
+        await message.author.send(embed=embed)
+        return
+    title="Meow List"
+    description=("Here are all the meows!")
+    entries = []
+    for meow in meows:
+        entries.append(paginator.Entry(str(meow['id']),meow['url']))
 
     # Do paginator for favorites > 10
     if len(entries) > 10:
@@ -252,7 +334,8 @@ async def pup(ctx):
         await post_response(message, "There are no pups! Add some with !addpup")
         return
     embed = discord.Embed(colour=discord.Colour.purple())
-    embed.title = "Pup {0}".format(pup['id'])
+    embed.title = "Pup #{0} - ${1}".format(pup['id'], pup['title'])
+    embed.author = pup['author']
     embed.set_image(url=pup['url'])
     await message.channel.send(embed=embed)
 
@@ -343,7 +426,7 @@ async def post_response(message, template, *args):
 async def post_usage(message, command):
     embed = discord.Embed(colour=discord.Colour.purple())
     embed.title = "Usage:"
-    embed.add_field(name=command['CMD'], value=command['INFO'],inline=False)
+    embed.add_field(name=command['CMD'], value=command['USAGE'],inline=False)
     await message.author.send(embed=embed)
 
 # Start the bot
