@@ -1,0 +1,13 @@
+# Discord
+discord_bot_id = ''
+discord_bot_token = ''
+# Restricted roles for certain commands
+admin_roles = ['Moderators', 'Core', 'Community Managers', 'Dictators', 'Jungle Junta', 'BANANO POLICE']
+# Admin User IDs
+admin_ids=['303599885800964097']
+# Set channels here to exclude from from like !meme and !pup
+no_spam_channels=[403628311965597697, 447447880983117824, 431388013256245258, 416306464970506240, 428624456362098698]
+# command prefix
+command_prefix='!'
+# Status
+playing_status=command_prefix + 'commandlist'
