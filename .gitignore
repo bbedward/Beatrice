@@ -105,3 +105,4 @@ venv.bak/
 
 # beatrice
 settings.py
+*.db
