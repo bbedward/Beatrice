@@ -326,7 +326,7 @@ async def pup(ctx):
         last_pup[message.channel.id] = datetime.datetime.now()
     tdelta = datetime.datetime.now() - last_pup[message.channel.id]
     if SPAM_THRESHOLD > tdelta.seconds:
-        await post_response(message, "No more memes for {0} seconds", (SPAM_THRESHOLD - tdelta.seconds))
+        await post_response(message, "No more pups for {0} seconds", (SPAM_THRESHOLD - tdelta.seconds))
         return
     last_pup[message.channel.id] = datetime.datetime.now()
     pup = db.get_next_pup()
