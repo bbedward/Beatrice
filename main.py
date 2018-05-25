@@ -388,7 +388,7 @@ async def addmeme(ctx, url: str = None, author: str = None, title: str = None):
 async def removememe(ctx, id: str):
     message = ctx.message
     if not is_admin(message.author):
-        returrm n
+        return
     elif db.remove_meme(id):
         await message.author.send("Meme {0} removed".format(id))
     else:
