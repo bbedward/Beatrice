@@ -79,28 +79,22 @@ def get_meows():
     return return_data
 
 def get_next_meme():
-    sequence = get_meme_sequence()
-    meme = Meme.select().order_by(Meme.created_at.desc()).offset(sequence - 1).limit(1)
-    if meme.count() == 0:
+    memes = get_memes()
+    if len(memes) == 0:
         return None
-    meme = meme.get()
-    return format_result(meme.id, meme.url, meme.author, meme.title)
+    return memes[get_meme_sequence() - 1]
 
 def get_next_pup():
-    sequence = get_pup_sequence()
-    pup = Pup.select().order_by(Pup.created_at.desc()).offset(sequence - 1).limit(1)
-    if pup.count() == 0:
+    pups = get_pups()
+    if len(pups) == 0:
         return None
-    pup = pup.get()
-    return format_result(pup.id, pup.url, pup.author, pup.title)
+    return pups[get_pup_sequence() - 1]
 
 def get_next_meow():
-    sequence = get_meow_sequence()
-    meow = Meow.select().order_by(Meow.created_at.desc()).offset(sequence - 1).limit(1)
-    if meow.count() == 0:
+    meows = get_meows()
+    if len(meows) == 0:
         return None
-    meow = meow.get()
-    return format_result(meow.id, meow.url, meow.author, meow.title)
+    return meows[get_meow_sequence() - 1]
 
 def add_meme(url, author, title):
     if meme_exists(url):
