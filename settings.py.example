@@ -11,3 +11,18 @@ no_spam_channels=[403628311965597697, 447447880983117824, 431388013256245258, 41
 command_prefix='!'
 # Status
 playing_status=command_prefix + 'commandlist'
+# Role for mute/muzzle
+muzzled_role='muzzled'
+# Banano-discord
+ARREST_ROLE='BANANO JAIL'
+CITIZEN_ROLE='Citizens'
+TROLL_ROLL='Troll'
+# Arrest messages
+RIGHTS="```You have been arrested by the BRPD for crimes against the Banano Republic. You have the right to remain unripe. Anything you say can and will be used against you in a banano court. You have the right to have an orangutan. If you cannot afford one, one will be appointed to you by the court. Until your orangutan arrives, you will spend your time in #jail, bail is set at 10 BANANO.```"
+RELEASE="```You have been released from Jail!```"
+# Citizenship messages
+CITIZENSHIP="```I hereby declare you a Citizen of the Banano Republic, may the Banano gods grant you all things which your heart desires.```"
+DEPORT="```I hereby withdraw your Citizenship to the Banano Republic, we don’t want to talk to you no more, you empty-headed animal-food-trough wiper. We fart in your general direction. Your mother was a hamster, and your father smelt of elderberries.```"
+# Troll messages
+TROLL="```You have been marked as a TROLL and are no longer a Citizen in the Banano Republic```"
+UNTROLL="```You are no longer known as a TROLL in the Banano Republic, please reapply for Citizenship.```"

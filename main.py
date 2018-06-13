@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord.ext.commands import Bot
 import asyncio
 import datetime
+import re
 
 import api
 import settings
@@ -98,10 +99,20 @@ REMOVEMEOW = {
         "INFO"     : "Remove meow matching URL or ID from the bot's meow list" 
 }
 
+MUTE = {
+   		"CMD"      : "{0}mute or {0}muzzle, takes: user, duration (optional)".format(COMMAND_PREFIX),
+        "INFO"     : "mute @bbedward 60 = mute bbedward for 60 minutes" 
+}
+
+UNMUTE = {
+   		"CMD"      : "{0}unmute or {0}unmuzzle, user mention".format(COMMAND_PREFIX),
+        "INFO"     : "Unmute mentioned user(s)" 
+}
+
 ### Dictionary of different command categories
 COMMANDS = {
 		"USER_COMMANDS"          : [PRICE, MEME, MEMELIST, PUP, PUPLIST, MEOW, MEOWLIST],
-        "ADMIN_COMMANDS"         : [ADDPUP, ADDMEME, ADDMEOW, REMOVEPUP, REMOVEMEME, REMOVEMEOW],
+        "ADMIN_COMMANDS"         : [ADDPUP, ADDMEME, ADDMEOW, REMOVEPUP, REMOVEMEME, REMOVEMEOW, MUTE, UNMUTE],
 }
 
 # Create discord client
@@ -136,6 +147,32 @@ async def on_ready():
     logger.info("ID: %s", client.user.id)
     create_spam_dicts()
     await client.change_presence(activity=discord.Game(settings.playing_status))
+
+@client.event
+async def on_member_join(member):
+	if db.silenced(member.id):
+		muzzled = discord.utils.get(member.guild.roles,name=settings.muzzled_role)
+		await member.add_roles(muzzled)
+
+# Periodic check job to unsilence users
+async def unsilence_users():
+	try:
+		await asyncio.sleep(10)
+		asyncio.get_event_loop().create_task(unsilence_users())
+		for s in db.get_silenced():
+			if s.expiration is None:
+				continue
+			elif datetime.datetime.now() >= s.expiration:
+				for guild in client.guilds:
+					if guild.id == s.server_id:
+						muzzled = discord.utils.get(guild.roles,name=settings.muzzled_role)
+						for member in guild.members:
+							if member.id == int(s.user_id):
+								await member.remove_roles(muzzled)
+								break
+				db.unsilence(s.user_id)
+	except Exception as ex:
+		logger.exception(ex)
 
 def is_private(channel):
     """Check if a discord channel is private"""
@@ -449,11 +486,115 @@ async def removemeow(ctx, id: str):
     else:
         await message.author.send("Could not remove meow {0}. It may not exist".format(id))
 
+@client.command(aliases=['muzzle'])
+async def mute(ctx):
+	message = ctx.message
+	if is_admin(message.author):
+		if len(message.mentions) > 0:
+			muzzled = discord.utils.get(message.guild.roles,name=settings.muzzled_role)
+			duration = find_amount(message.content)
+			expiration = None
+			if duration is not None:
+				expiration = datetime.datetime.now() + datetime.timedelta(minutes=float(duration))
+			for member in message.mentions:
+				if not db.silence(member.id, message.guild.id, expiration=expiration):
+					await post_response(message, '<@{0}> is already muzzled', member.id)
+					continue
+				await member.add_roles(muzzled)
+				if duration is not None:
+					await post_response(message, '<@{0}> has been muzzled for {1} minutes', member.id, duration)
+				else:
+					await post_response(message, '<@{0}> has been muzzled indefinitely', member.id)
+			await message.add_reaction('\U0001f694')
+
+@client.command(aliases=['unmuzzle'])
+async def unmute(ctx):
+	message = ctx.message
+	if is_admin(message.author):
+		if len(message.mentions) > 0:
+			muzzled = discord.utils.get(message.guild.roles,name=settings.muzzled_role)
+			for member in message.mentions:
+				await member.remove_roles(muzzled)
+				if not db.unsilence(member.id):
+					await post_response(message, '<@{0}> is not muzzled', member.id)
+					continue
+				await post_response(message, '<@{0}> has been unmuzzled', member.id)
+
+@client.command()
+async def arrest(ctx):
+	message = ctx.message
+	if is_admin(message.author):
+		if len(message.mentions) > 0:
+			jail = discord.utils.get(message.guild.roles,name=settings.ARREST_ROLE)
+			for member in message.mentions:
+				await member.add_roles(jail)
+				await post_response(message, settings.RIGHTS, mention_id=member.id)
+			await message.add_reaction('\U0001f694')
+
+@client.command()
+async def release(ctx):
+	message = ctx.message
+	if is_admin(message.author):
+		if len(message.mentions) > 0:
+			# Tip unban too
+			jail = discord.utils.get(message.guild.roles,name=settings.ARREST_ROLE)
+			for member in message.mentions:
+				await member.remove_roles(jail)
+				await post_response(message, settings.RELEASE, mention_id=member.id)
+
+@client.command()
+async def troll(ctx):
+	message = ctx.message
+	if is_admin(message.author):
+		if len(message.mentions) > 0:
+			troll = discord.utils.get(message.guild.roles,name=settings.TROLL_ROLL)
+			citizenship = discord.utils.get(message.guild.roles,name=settings.CITIZEN_ROLE)
+			for member in message.mentions:
+				await member.add_roles(troll)
+				await member.remove_roles(citizenship)
+				await post_response(message, settings.TROLL, mention_id=member.id)
+
+@client.command()
+async def untroll(ctx):
+	message = ctx.message
+	if is_admin(message.author):
+		if len(message.mentions) > 0:
+			troll = discord.utils.get(message.guild.roles,name=settings.TROLL_ROLL)
+			for member in message.mentions:
+				await member.remove_roles(troll)
+				await post_response(message, settings.UNTROLL, mention_id=member.id)
+
+@client.command()
+async def citizenship(ctx):
+	message = ctx.message
+	if is_admin(message.author):
+		if len(message.mentions) > 0:
+			citizenship = discord.utils.get(message.guild.roles,name=settings.CITIZEN_ROLE)
+			for member in message.mentions:
+				await member.add_roles(citizenship)
+				await post_response(message, settings.CITIZENSHIP, mention_id=member.id)
+			await message.add_reaction('\:bananorepublic:429691019538202624')
+
+@client.command()
+async def deport(ctx):
+	message = ctx.message
+	if is_admin(message.author):
+		if len(message.mentions) > 0:
+			citizenship = discord.utils.get(message.guild.roles,name=settings.CITIZEN_ROLE)
+			for member in message.mentions:
+				await member.remove_roles(citizenship)
+				await post_response(message, settings.DEPORT, mention_id=member.id)
+			await message.add_reaction('\U0001F6F3')
+
+
+
 ### Re-Used Discord Functions
-async def post_response(message, template, *args):
+async def post_response(message, template, *args, mention_id=None):
+    if mention_id is None:
+        mention_id = message.author.id
     response = template.format(*args)
     if not is_private(message.channel):
-        response = "<@" + str(message.author.id) + "> \n" + response
+        response = "<@" + str(mention_id) + "> \n" + response
     logger.info("sending response: '%s' for message: '%s' to userid: '%s' name: '%s'", response, message.content, message.author.id, message.author.name)
     asyncio.sleep(0.05) # Slight delay to avoid discord bot responding above commands
     return await message.channel.send(response)
@@ -463,6 +604,16 @@ async def post_usage(message, command):
     embed.title = "Usage:"
     embed.add_field(name=command['CMD'], value=command['USAGE'],inline=False)
     await message.author.send(embed=embed)
+
+#
+
+def find_amount(input_text):
+	regex = r'(?:^|\s)(\d*\.?\d+)(?=$|\s)'
+	matches = re.findall(regex, input_text, re.IGNORECASE)
+	if len(matches) >= 1:
+		return float(matches[0].strip())
+	else:
+		return None
 
 # Start the bot
 client.run(settings.discord_bot_token)

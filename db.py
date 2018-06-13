@@ -138,6 +138,29 @@ def remove_meow(id):
     except Meow.DoesNotExist:
         return False
 
+# Mute
+
+def silenced(user_id):
+	user_id = str(user_id)
+	return SilenceList.select().where(SilenceList.user_id == user_id).count() > 0
+	
+def silence(user_id, server_id, expiration=None):
+	user_id = str(user_id)
+	if silenced(user_id):
+		return False
+	s = SilenceList(user_id=user_id, expiration=expiration, server_id=server_id)
+	s.save()
+	return True
+	
+def unsilence(user_id):
+	user_id = str(user_id)
+	if not silenced(user_id):
+		return False
+	return SilenceList.delete().where(SilenceList.user_id == user_id).execute() > 0
+		
+def get_silenced():
+	return SilenceList.select()
+
 ### Models
 class BaseModel(Model):
     class Meta:
@@ -181,9 +204,15 @@ class Sequence(BaseModel):
     class Meta:
         db_table = 'sequences'
 
+# Silence list (this is for server-wide silence role)
+class SilenceList(BaseModel):
+	user_id = CharField()
+	expiration = DateTimeField(default=None,null=True)
+	server_id = IntegerField()
+
 ### Initialization
 def create_db():
     db.connect()
-    db.create_tables([Meme, Pup, Sequence, Meow], safe=True)
+    db.create_tables([Meme, Pup, Sequence, Meow, SilenceList], safe=True)
 
 create_db()
