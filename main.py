@@ -193,14 +193,21 @@ async def price(ctx):
     last_price[message.channel.id] = datetime.datetime.now()
     msg = await message.channel.send("Retrieving latest prices...")
     embed = discord.Embed(colour=discord.Colour.green())
-    embed.title = "Current NANO Prices"
+    embed.title = "Current Prices"
     prices = await api.get_all_prices()
     pricestr = "{0:.8f} BTC"
     for exchange, price in prices:
          embed.add_field(name=exchange, value=pricestr.format(price))
     cmc = await api.get_cmc_data()
+    embed.description = ''
     if cmc is not None:
-        embed.description = cmc
+        embed.description += '**NANO**\n'
+        embed.description += cmc
+    banpernan, usdprice, volume = await api.get_banano_price()
+    if banpernan is not None:
+        embed.add_field(name='BANANO-NANO', value='{0:.2f} BAN : 1 NANO'.format(banpernan))
+        embed.add_field(name='BANANO 24H Vol.', value='{0:.6f} NANO'.format(volume))
+        embed.add_field(name='BANANO USD', value='${0:.4f} : 1 BAN'.format(usdprice))
     await msg.edit(content="", embed=embed)
 
 @client.command()

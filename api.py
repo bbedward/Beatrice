@@ -5,6 +5,7 @@ BINANCE_URL = 'https://www.binance.com/api/v3/ticker/price?symbol=NANOBTC'
 KUCOIN_URL = 'https://api.kucoin.com/v1/open/tick?symbol=XRB-BTC'
 NANEX_URL = 'https://nanex.co/api/public/ticker/btcnano'
 CMC_URL = 'https://api.coinmarketcap.com/v2/ticker/1567/'
+BANANO_URL = 'https://api.creeper.banano.cc/ticker'
 
 async def json_get(reqUrl):
     try:
@@ -14,6 +15,16 @@ async def json_get(reqUrl):
                 return jsonResp
     except BaseException:
         return None
+
+async def get_banano_price():
+    response = await json_get(BANANO_URL)
+    if response is not None:
+        banpernan = 1 / float(response['data']['quotes']['NANO']['price'])
+        usdprice = float(response['data']['quotes']['USD']['price'])
+        nanovol = float(response['data']['quotes']['NANO']['volume_24h'])
+        return (banpernan, usdprice, nanovol)
+    else:
+        return (None, None, None)
 
 async def get_binance_price():
     response = await json_get(BINANCE_URL)
@@ -45,7 +56,6 @@ async def get_cmc_data():
     mcap = "${0:,}".format(int(response["data"]["quotes"]["USD"]["market_cap"]))
     volume = "${0:,}".format(int(response["data"]["quotes"]["USD"]["volume_24h"]))
     resp = ""
-    resp += "**CoinMarketCap:**"
     resp += "```\nRank       : {0}".format(rank)
     resp += "\nPrice      : {0}".format(usd)
     resp += "\nMarket Cap : {0}".format(mcap)
