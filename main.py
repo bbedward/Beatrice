@@ -13,7 +13,7 @@ import paginator
 
 logger = util.get_logger("main")
 
-BOT_VERSION = "0.1"
+BOT_VERSION = "0.2"
 
 # Spam Threshold (Seconds) - how long to output certain commands (e.g. price)
 SPAM_THRESHOLD=60
@@ -21,7 +21,7 @@ SPAM_THRESHOLD=60
 COMMAND_PREFIX=settings.command_prefix
 
 # HELP menu header
-AUTHOR_HEADER="Beatrice v{0} (NANO Utility Bot)".format(BOT_VERSION)
+AUTHOR_HEADER="Beatrice v{0} (BA/NANO Utility Bot)".format(BOT_VERSION)
 
 # Command DOC (TRIGGER, CMD, Overview, Info)
 '''
@@ -245,6 +245,9 @@ async def price(ctx):
         embed.add_field(name='BANANO-NANO', value='{0:.2f} BAN : 1 NANO'.format(banpernan))
         embed.add_field(name='BANANO 24H Vol.', value='{0:.6f} NANO'.format(volume))
         embed.add_field(name='BANANO USD', value='${0:.4f} : 1 BAN'.format(usdprice))
+    btc_usd = await api.get_btc_usd()
+    if btc_usd is not None:
+        embed.set_footer(text='1 BTC = {0}'.format(btc_usd))
     await msg.edit(content="", embed=embed)
 
 @client.command()

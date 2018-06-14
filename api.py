@@ -5,6 +5,7 @@ BINANCE_URL = 'https://www.binance.com/api/v3/ticker/price?symbol=NANOBTC'
 KUCOIN_URL = 'https://api.kucoin.com/v1/open/tick?symbol=XRB-BTC'
 NANEX_URL = 'https://nanex.co/api/public/ticker/btcnano'
 CMC_URL = 'https://api.coinmarketcap.com/v2/ticker/1567/'
+CMC_BTC_URL = 'https://api.coinmarketcap.com/v2/ticker/1/'
 BANANO_URL = 'https://api.creeper.banano.cc/ticker'
 
 async def json_get(reqUrl):
@@ -61,6 +62,12 @@ async def get_cmc_data():
     resp += "\nMarket Cap : {0}".format(mcap)
     resp += "\nVolume(24H): {0}```".format(volume)
     return resp
+
+async def get_btc_usd():
+	response = await json_get(CMC_BTC_URL)
+	if response is None:
+		return None
+	return "${0:,.2f}".format(float(response["data"]["quotes"]["USD"]["price"]))
 
 async def get_all_prices():
     """Fires all price requests simultaneously and exits after getting all results. Returns array of results"""
