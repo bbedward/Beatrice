@@ -147,6 +147,7 @@ async def on_ready():
     logger.info("ID: %s", client.user.id)
     create_spam_dicts()
     await client.change_presence(activity=discord.Game(settings.playing_status))
+    asyncio.get_event_loop().create_task(unsilence_users())
 
 @client.event
 async def on_member_join(member):
