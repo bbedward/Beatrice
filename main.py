@@ -248,7 +248,7 @@ async def price(ctx):
         embed.add_field(name='BANANO USD', value='${0:.4f} : 1 BAN'.format(usdprice))
     btc_usd = await api.get_btc_usd()
     if btc_usd is not None:
-        embed.set_footer(text='1 BTC = {0}'.format(btc_usd))
+        embed.set_footer(text='BANANO Market Cap: ${1:,.2f} | 1 BTC = {0}'.format(btc_usd, 3402832669*usdprice))
     await msg.edit(content="", embed=embed)
 
 @client.command()
