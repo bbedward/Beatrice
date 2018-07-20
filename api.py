@@ -2,7 +2,7 @@ import aiohttp
 import asyncio
 
 BINANCE_URL = 'https://www.binance.com/api/v3/ticker/price?symbol=NANOBTC'
-KUCOIN_URL = 'https://api.kucoin.com/v1/open/tick?symbol=XRB-BTC'
+KUCOIN_URL = 'https://api.kucoin.com/v1/open/tick?symbol=NANO-BTC'
 NANEX_URL = 'https://nanex.co/api/public/ticker/btcnano'
 CMC_URL = 'https://api.coinmarketcap.com/v2/ticker/1567/'
 CMC_BTC_URL = 'https://api.coinmarketcap.com/v2/ticker/1/'
