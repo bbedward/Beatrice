@@ -19,6 +19,8 @@ BOT_VERSION = "0.2"
 SPAM_THRESHOLD=60
 # Change command prefix to whatever you want to begin commands with
 COMMAND_PREFIX=settings.command_prefix
+# CMC Professional API Key
+CMC_API_KEY = "<GUID>"
 
 # HELP menu header
 AUTHOR_HEADER="Beatrice v{0} (BA/NANO Utility Bot)".format(BOT_VERSION)
@@ -148,6 +150,7 @@ async def on_ready():
     create_spam_dicts()
     await client.change_presence(activity=discord.Game(settings.playing_status))
     asyncio.get_event_loop().create_task(unsilence_users())
+	asyncio.get_event_loop().create_task(load_cmc_data(False))
 
 @client.event
 async def on_member_join(member):
@@ -172,6 +175,23 @@ async def unsilence_users():
 								await member.remove_roles(muzzled)
 								break
 				db.unsilence(s.user_id)
+	except Exception as ex:
+		logger.exception(ex)
+
+# Periodic update job to get CMC data
+async def load_cmc_data(wait):
+	try:
+		if wait:
+			await asyncio.sleep(7200)
+		asyncio.get_event_loop().create_task(load_cmc_data(True))
+		client = Client(CMC_API_KEY)
+		response = client.request_api_endpoint("cryptocurrency/listings/latest", {'limit': 1000})
+
+		if response["status"]["error_code"] is 0:
+			f = open('cmc.txt', 'w')
+			f.write(str(response))
+			f.close()
+
 	except Exception as ex:
 		logger.exception(ex)
 
@@ -246,9 +266,11 @@ async def price(ctx):
         embed.add_field(name='BANANO-NANO', value='{0:.2f} BAN : 1 NANO'.format(banpernan))
         embed.add_field(name='BANANO 24H Vol.', value='{0:.6f} NANO'.format(volume))
         embed.add_field(name='BANANO USD', value='${0:.4f} : 1 BAN'.format(usdprice))
-    btc_usd = await api.get_btc_usd()
+	btc_usd = await api.get_btc_usd()
+    cap = 3402832669 * usdprice
+    rank = await api.get_cmc_rank(cap)
     if btc_usd is not None:
-        embed.set_footer(text='BANANO Market Cap: ${1:,.2f} | 1 BTC = {0}'.format(btc_usd, 3402832669*usdprice))
+        embed.set_footer(text='BANANO CMC #{2} | Market Cap: ${1:,.2f} | 1 BTC = {0}'.format(btc_usd, cap, rank))
     await msg.edit(content="", embed=embed)
 
 @client.command()
