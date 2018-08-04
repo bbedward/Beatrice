@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.ext.commands import Bot
+from coinmarketcap_pro.client import Client
 import asyncio
 import datetime
 import re
