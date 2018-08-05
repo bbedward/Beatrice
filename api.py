@@ -115,8 +115,9 @@ async def get_banano_rank(mcap, limit):
         return "N/A"
 	i = 1
 	for coin in ticker['data']:
-		if coin['quote']['USD']['market_cap'] < mcap:
+		if int(coin['quote']['USD']['market_cap']) < mcap:
 			return i
 		else:
 			i += 1
+    return "N/A"
 
