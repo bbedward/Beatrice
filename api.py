@@ -2,6 +2,9 @@ import aiohttp
 import asyncio
 import redis
 import json
+import util
+
+logger = util.get_logger("api")
 
 CACHE_MCAP_RESULT_KEY = 'beatrice_cmccache'
 
@@ -99,13 +102,19 @@ async def get_cmc_ticker(limit):
     response = rd.get(CACHE_MCAP_RESULT_KEY)
     if response is None:
         # Not in cache, retrieve it from API
-        response = await json_get(f'https://api.coinmarketcap.com/v2/ticker/?limit={limit}')
-        if response is None:
-            return None
+        response = None
+        for i in range(10):
+            i = 100 * i + 1
+            result = await json_get(f'https://api.coinmarketcap.com/v2/ticker/?limit={limit}&start={i}')
+            if response is None:
+                response = result
+            else:
+                for k in result['data']:
+                    response['data'][k] = result['data'][k]
         # Store result from API with an expiry of 1 hour
-        rd.set(CACHE_MCAP_RESULT_KEY, json.dumps(response), ex=3600)        
+        rd.set(CACHE_MCAP_RESULT_KEY, json.dumps(response), ex=3600)
     else:
-        response = json.loads(response)
+        response = json.loads(response.decode('utf-8'))
     return response
 
 
@@ -114,10 +123,11 @@ async def get_banano_rank(mcap, limit):
 	if ticker is None:
 		return "N/A"
 	i = 1
-	for coin in ticker['data']:
-		if int(coin['quote']['USD']['market_cap']) < mcap:
+	for key in ticker['data']:
+		logger.info(int(ticker['data'][key]['quotes']['USD']['market_cap']))
+		if int(ticker['data'][key]['quotes']['USD']['market_cap']) < mcap:
 			return i
 		else:
 			i += 1
-    return "N/A"
+	return "N/A"
 
