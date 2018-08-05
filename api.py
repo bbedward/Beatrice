@@ -1,5 +1,9 @@
 import aiohttp
 import asyncio
+import redis
+import json
+
+CACHE_MCAP_RESULT_KEY = 'beatrice_cmccache'
 
 BINANCE_URL = 'https://www.binance.com/api/v3/ticker/price?symbol=NANOBTC'
 KUCOIN_URL = 'https://api.kucoin.com/v1/open/tick?symbol=NANO-BTC'
@@ -89,18 +93,29 @@ async def get_all_prices():
     ret.sort(key=lambda tup: tup[1], reverse=True)
     return ret
 
-async def get_cmc_rank(cap):
-	try:
-		open('cmc.txt', 'r')
-	except IOError:
-		return "0"
-	
-	f = open('cmc.txt', 'r')
-	r = eval(f.read())
-	f.close()
+async def get_cmc_ticker(limit):
+    # Try to retrieve cached version first
+    rd = redis.Redis()
+    response = rd.get(CACHE_MCAP_RESULT_KEY)
+    if response is None:
+        # Not in cache, retrieve it from API
+        response = await json_get(f'https://api.coinmarketcap.com/v2/ticker/?limit={limit}')
+        if response is None:
+            return None
+        # Store result from API with an expiry of 1 hour
+        rd.set(CACHE_MCAP_RESULT_KEY, json.dumps(response), ex=3600)        
+    else:
+        response = json.loads(response)
+    return response
+
+
+async def get_banano_rank(mcap, limit):
+    ticker = await get_cmc_ticker(limit)
+    if ticker is None:
+        return "N/A"
 	i = 1
-	for coin in r['data']:
-		if coin['quote']['USD']['market_cap'] < cap:
+	for coin in ticker['data']:
+		if coin['quote']['USD']['market_cap'] < mcap:
 			return i
 		else:
 			i += 1
