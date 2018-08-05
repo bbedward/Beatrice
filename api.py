@@ -89,5 +89,19 @@ async def get_all_prices():
     ret.sort(key=lambda tup: tup[1], reverse=True)
     return ret
 
-
+async def get_cmc_rank(cap):
+	try:
+		open('cmc.txt', 'r')
+	except IOError:
+		return "0"
+	
+	f = open('cmc.txt', 'r')
+	r = eval(f.read())
+	f.close()
+	i = 1
+	for coin in r['data']:
+		if coin['quote']['USD']['market_cap'] < cap:
+			return i
+		else:
+			i += 1
 
