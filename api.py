@@ -110,9 +110,9 @@ async def get_cmc_ticker(limit):
 
 
 async def get_banano_rank(mcap, limit):
-    ticker = await get_cmc_ticker(limit)
-    if ticker is None:
-        return "N/A"
+	ticker = await get_cmc_ticker(limit)
+	if ticker is None:
+		return "N/A"
 	i = 1
 	for coin in ticker['data']:
 		if coin['quote']['USD']['market_cap'] < mcap:
