@@ -16,7 +16,7 @@ logger = util.get_logger("main")
 BOT_VERSION = "0.2"
 
 # Spam Threshold (Seconds) - how long to output certain commands (e.g. price)
-SPAM_THRESHOLD=60
+SPAM_THRESHOLD=300
 # Change command prefix to whatever you want to begin commands with
 COMMAND_PREFIX=settings.command_prefix
 
@@ -226,7 +226,7 @@ async def price(ctx):
         last_price[message.channel.id] = datetime.datetime.now()
     tdelta = datetime.datetime.now() - last_price[message.channel.id]
     if SPAM_THRESHOLD > tdelta.seconds:
-        await post_response(message, "No more price for {0} seconds", (SPAM_THRESHOLD - tdelta.seconds))
+        await message.author.send("No more price for {0} seconds".format(SPAM_THRESHOLD - tdelta.seconds))
         return
     last_price[message.channel.id] = datetime.datetime.now()
     msg = await message.channel.send("Retrieving latest prices...")
