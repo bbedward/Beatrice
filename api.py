@@ -30,7 +30,8 @@ async def get_banano_price():
         banpernan = 1 / float(response['data']['quotes']['NANO']['price'])
         usdprice = float(response['data']['quotes']['USD']['price'])
         nanovol = float(response['data']['quotes']['NANO']['volume_24h'])
-        return (banpernan, usdprice, nanovol)
+	btcvol = float(response['data']['quotes']['BTC']['volume_24h'])
+        return (banpernan, usdprice, nanovol, btcvol)
     else:
         return (None, None, None)
 
