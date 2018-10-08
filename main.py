@@ -242,17 +242,18 @@ async def price(ctx):
         embed.description += '**NANO**\n'
         embed.description += cmc
     banpernan, banperbtc, usdprice, volume, btcvolume = await api.get_banano_price()
+    mcap = 3402832669 * usdprice
+    banrank = await api.get_banano_rank(mcap, 1000)
     if banpernan is not None:
         embed.add_field(name='BANANO-NANO', value='{0:.2f} BAN : 1 NANO'.format(banpernan))
-        embed.add_field(name='BANANO-BTC', value='{0:.2f} BAN : 1 BTC'.format(banperbtc))
-        embed.add_field(name='BANANO 24H Vol. (NANO)', value='{0:.4f} BTC'.format(volume))
-        embed.add_field(name='BANANO 24H Vol. (BTC)', value='{0:.4f} BTC'.format(btcvolume))
+        embed.add_field(name='BANANO-BTC', value='{0:.8f} BTC'.format(banperbtc))
+        embed.add_field(name='BAN-NANO 24H Vol.', value='{0:.6f} NANO'.format(volume))
+        embed.add_field(name='BAN-BTC 24H Vol.', value='{0:.4f} BTC'.format(btcvolume))
         embed.add_field(name='BANANO USD', value='${0:.4f} : 1 BAN'.format(usdprice))
+        embed.add_field(name='BANANO RANK', value='#{0}'.format(banrank))
     btc_usd = await api.get_btc_usd()
-    mcap = 3402832669 * usdprice
-    rank = await api.get_banano_rank(mcap, 1000)
     if btc_usd is not None:
-        embed.set_footer(text='BANANO RANK: #{2} | Market Cap: ${1:,.2f} | 1 BTC = {0}'.format(btc_usd, mcap, rank))
+        embed.set_footer(text='BANANO Market Cap: ${1:,.2f} | 1 BTC = {0}'.format(btc_usd, mcap))
     await msg.edit(content="", embed=embed)
 
 @client.command()
