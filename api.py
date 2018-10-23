@@ -14,7 +14,7 @@ NANEX_URL = 'https://nanex.co/api/public/ticker/btcnano'
 CMC_URL = 'https://api.coinmarketcap.com/v2/ticker/1567/'
 CMC_BTC_URL = 'https://api.coinmarketcap.com/v2/ticker/1/'
 BANANO_URL = 'https://api.creeper.banano.cc/ticker'
-BANANO_SUPPLY_URL = 'https://api.creeper.banano.cc/ticker'
+BANANO_SUPPLY_URL = 'https://api.creeper.banano.cc/supply'
 
 async def json_get(reqUrl):
     try:
