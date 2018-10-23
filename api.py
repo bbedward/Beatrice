@@ -7,6 +7,7 @@ import util
 logger = util.get_logger("api")
 
 CACHE_MCAP_RESULT_KEY = 'beatrice_cmccache'
+CACHE_CREEPER_KEY = 'beatrice_creepercache'
 
 BINANCE_URL = 'https://www.binance.com/api/v3/ticker/price?symbol=NANOBTC'
 KUCOIN_URL = 'https://api.kucoin.com/v1/open/tick?symbol=NANO-BTC'
@@ -14,7 +15,8 @@ NANEX_URL = 'https://nanex.co/api/public/ticker/btcnano'
 CMC_URL = 'https://api.coinmarketcap.com/v2/ticker/1567/'
 CMC_BTC_URL = 'https://api.coinmarketcap.com/v2/ticker/1/'
 BANANO_URL = 'https://api.creeper.banano.cc/ticker'
-BANANO_SUPPLY_URL = 'https://api.creeper.banano.cc/supply'
+
+rd = redis.Redis()
 
 async def json_get(reqUrl):
     try:
@@ -26,16 +28,18 @@ async def json_get(reqUrl):
         return None
 
 async def get_banano_price():
-    response = await json_get(BANANO_URL)
-    if response is not None:
+    response = rd.get(CACHE_CREEPER_KEY)
+    if response is None:
+        response = await json_get(BANANO_URL)
+    else:
+        response = json.loads(response.decode('utf-8'))
+    if response is not None and 'data' in response:
+        rd.set(CACHE_CREEPER_KEY, json.dumps(response), ex=300) # Cache result for 5 minutes
         banpernan = 1 / float(response['data']['quotes']['NANO']['price'])
         usdprice = float(response['data']['quotes']['USD']['price'])
         nanovol = float(response['data']['quotes']['NANO']['volume_24h'])
         btcvol = float(response['data']['quotes']['BTC']['volume_24h'])
-        supply_resp = await json_get(BANANO_SUPPLY_URL)
-        circ_supply = 0
-        if 'supply' in supply_resp:
-            circ_supply = float(supply_resp['supply']['circulating'])
+        circ_supply = float(response['data']['circulating_supply'])
         return (banpernan, float(response['data']['quotes']['BTC']['price']), usdprice, nanovol, btcvol, circ_supply)
     else:
         return (None, None, None, None, None, None)
@@ -104,7 +108,6 @@ async def get_all_prices():
 
 async def get_cmc_ticker(limit):
     # Try to retrieve cached version first
-    rd = redis.Redis()
     response = rd.get(CACHE_MCAP_RESULT_KEY)
     if response is None:
         # Not in cache, retrieve it from API
