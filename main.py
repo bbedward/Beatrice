@@ -241,8 +241,8 @@ async def price(ctx):
     if cmc is not None:
         embed.description += '**NANO**\n'
         embed.description += cmc
-    banpernan, banperbtc, usdprice, volume, btcvolume = await api.get_banano_price()
-    mcap = 3402832669 * usdprice
+    banpernan, banperbtc, usdprice, volume, btcvolume, circ_supply = await api.get_banano_price()
+    mcap = circ_supply * usdprice
     banrank = await api.get_banano_rank(mcap, 1000)
     if banpernan is not None:
         embed.add_field(name='BANANO-NANO', value='{0:.2f} BAN : 1 NANO'.format(banpernan))

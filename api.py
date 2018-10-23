@@ -14,6 +14,7 @@ NANEX_URL = 'https://nanex.co/api/public/ticker/btcnano'
 CMC_URL = 'https://api.coinmarketcap.com/v2/ticker/1567/'
 CMC_BTC_URL = 'https://api.coinmarketcap.com/v2/ticker/1/'
 BANANO_URL = 'https://api.creeper.banano.cc/ticker'
+BANANO_SUPPLY_URL = 'https://api.creeper.banano.cc/ticker'
 
 async def json_get(reqUrl):
     try:
@@ -31,9 +32,13 @@ async def get_banano_price():
         usdprice = float(response['data']['quotes']['USD']['price'])
         nanovol = float(response['data']['quotes']['NANO']['volume_24h'])
         btcvol = float(response['data']['quotes']['BTC']['volume_24h'])
-        return (banpernan, float(response['data']['quotes']['BTC']['price']), usdprice, nanovol, btcvol)
+        supply_resp = await json_get(BANANO_SUPPLY_URL)
+        circ_supply = 0
+        if 'supply' in supply_resp:
+            circ_supply = float(supply_resp['supply']['circulating'])
+        return (banpernan, float(response['data']['quotes']['BTC']['price']), usdprice, nanovol, btcvol, circ_supply)
     else:
-        return (None, None, None)
+        return (None, None, None, None, None, None)
 
 async def get_binance_price():
     response = await json_get(BINANCE_URL)
