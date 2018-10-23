@@ -109,7 +109,7 @@ async def get_cmc_ticker(limit):
     if response is None:
         # Not in cache, retrieve it from API
         response = None
-        for i in range(10):
+        for i in range(12):
             i = 100 * i + 1
             result = await json_get(f'https://api.coinmarketcap.com/v2/ticker/?limit={limit}&start={i}')
             if response is None:
