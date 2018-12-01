@@ -70,7 +70,7 @@ async def get_cmc_data():
     if response is None:
         return None
     rank = response["market_cap_rank"]
-    usd = "${0:,.2f}".format(float(response["current_prices"]["usd"]))
+    usd = "${0:,.2f}".format(float(response["market_data"]["current_price"]["usd"]))
     mcap = "${0:,}".format(int(response["market_cap"]["usd"]))
     volume = "${0:,}".format(int(response["total_volume"]["usd"]))
     resp = ""
@@ -84,7 +84,7 @@ async def get_btc_usd():
 	response = await json_get(CGBTC_URL)
 	if response is None:
 		return None
-	return "${0:,.2f}".format(float(response["current_prices"]["usd"]))
+	return "${0:,.2f}".format(float(response["market_data"]["current_price"]["usd"]))
 
 async def get_all_prices():
     """Fires all price requests simultaneously and exits after getting all results. Returns array of results"""
