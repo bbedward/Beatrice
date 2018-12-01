@@ -84,7 +84,7 @@ async def get_btc_usd():
 	response = await json_get(CGBTC_URL)
 	if response is None:
 		return None
-	return "${0:,.2f}".format(float(response["current_price"][]))
+	return "${0:,.2f}".format(float(response["current_price"]["usd"]))
 
 async def get_all_prices():
     """Fires all price requests simultaneously and exits after getting all results. Returns array of results"""
