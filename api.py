@@ -124,5 +124,5 @@ async def get_banano_rank(mcap, limit):
 	ticker = await get_cmc_ticker(limit)
 	if "market_cap_rank" not in ticker:
 		return "N/A"
-	return ticket["market_cap_rank"]
+	return ticker["market_cap_rank"]
 
