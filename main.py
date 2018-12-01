@@ -231,7 +231,7 @@ async def price(ctx):
     last_price[message.channel.id] = datetime.datetime.now()
     msg = await message.channel.send("Retrieving latest prices...")
     embed = discord.Embed(colour=discord.Colour.green())
-    embed.title = "Current Prices"
+    embed.title = "Current Prices - Powered by CoinGecko"
     prices = await api.get_all_prices()
     pricestr = "{0:.8f} BTC"
     for exchange, price in prices:

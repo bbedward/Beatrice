@@ -12,8 +12,8 @@ CACHE_CREEPER_KEY = 'beatrice_creepercache'
 BINANCE_URL = 'https://www.binance.com/api/v3/ticker/price?symbol=NANOBTC'
 KUCOIN_URL = 'https://api.kucoin.com/v1/open/tick?symbol=NANO-BTC'
 NANEX_URL = 'https://nanex.co/api/public/ticker/btcnano'
-CMC_URL = 'https://api.coinmarketcap.com/v2/ticker/1567/'
-CMC_BTC_URL = 'https://api.coinmarketcap.com/v2/ticker/1/'
+CGNANO_URL = 'https://api.coingecko.com/api/v3/coins/nano?tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false'
+CGBTC_URL = 'https://api.coingecko.com/api/v3/coins/bitcoin?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false'
 BANANO_URL = 'https://api.creeper.banano.cc/ticker'
 
 rd = redis.Redis()
@@ -66,13 +66,13 @@ async def get_nanex_price():
         return None
 
 async def get_cmc_data():
-    response = await json_get(CMC_URL)
+    response = await json_get(CGNANO_URL)
     if response is None:
         return None
-    rank = response["data"]["rank"]
-    usd = "${0:,.2f}".format(float(response["data"]["quotes"]["USD"]["price"]))
-    mcap = "${0:,}".format(int(response["data"]["quotes"]["USD"]["market_cap"]))
-    volume = "${0:,}".format(int(response["data"]["quotes"]["USD"]["volume_24h"]))
+    rank = response["market_cap_rank"]
+    usd = "${0:,.2f}".format(float(response["current_price"]["usd"]))
+    mcap = "${0:,}".format(int(response["market_cap"]["usd"]))
+    volume = "${0:,}".format(int(response["total_volume"]["usd"]))
     resp = ""
     resp += "```\nRank       : {0}".format(rank)
     resp += "\nPrice      : {0}".format(usd)
@@ -81,10 +81,10 @@ async def get_cmc_data():
     return resp
 
 async def get_btc_usd():
-	response = await json_get(CMC_BTC_URL)
+	response = await json_get(CGBTC_URL)
 	if response is None:
 		return None
-	return "${0:,.2f}".format(float(response["data"]["quotes"]["USD"]["price"]))
+	return "${0:,.2f}".format(float(response["current_price"][]))
 
 async def get_all_prices():
     """Fires all price requests simultaneously and exits after getting all results. Returns array of results"""
@@ -112,16 +112,8 @@ async def get_cmc_ticker(limit):
     if response is None:
         # Not in cache, retrieve it from API
         response = None
-        for i in range(12):
-            i = 100 * i + 1
-            result = await json_get(f'https://api.coinmarketcap.com/v2/ticker/?limit={limit}&start={i}')
-            if response is None:
-                response = result
-            else:
-                for k in result['data']:
-                    response['data'][k] = result['data'][k]
-        # Store result from API with an expiry of 1 hour
-        rd.set(CACHE_MCAP_RESULT_KEY, json.dumps(response), ex=3600)
+        result = await json_get('https://api.coingecko.com/api/v3/coins/banano?localization=false&tickers=true&market_data=true&community_data=false&developer_data=false&sparkline=false')
+        rd.set(CACHE_MCAP_RESULT_KEY, json.dumps(result), ex=3600)
     else:
         response = json.loads(response.decode('utf-8'))
     return response
@@ -129,14 +121,7 @@ async def get_cmc_ticker(limit):
 
 async def get_banano_rank(mcap, limit):
 	ticker = await get_cmc_ticker(limit)
-	if ticker is None:
+	if "market_cap_rank" not in ticker:
 		return "N/A"
-	i = 1
-	for key in ticker['data']:
-		logger.info(int(ticker['data'][key]['quotes']['USD']['market_cap']))
-		if int(ticker['data'][key]['quotes']['USD']['market_cap']) < mcap:
-			return i
-		else:
-			i += 1
-	return "N/A"
+	return ticket["market_cap_rank"]
 
