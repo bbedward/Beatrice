@@ -71,7 +71,7 @@ async def get_cmc_data():
         return None
     rank = response["market_cap_rank"]
     usd = "${0:,.2f}".format(float(response["market_data"]["current_price"]["usd"]))
-    mcap = "${0:,}".format(int(response["market_cap"]["usd"]))
+    mcap = "${0:,}".format(int(response["market_data"]["market_cap"]["usd"]))
     volume = "${0:,}".format(int(response["market_data"]["total_volume"]["usd"]))
     resp = ""
     resp += "```\nRank       : {0}".format(rank)
