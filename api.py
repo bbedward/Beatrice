@@ -114,6 +114,7 @@ async def get_cmc_ticker(limit):
         response = None
         result = await json_get('https://api.coingecko.com/api/v3/coins/banano?localization=false&tickers=true&market_data=true&community_data=false&developer_data=false&sparkline=false')
         rd.set(CACHE_MCAP_RESULT_KEY, json.dumps(result), ex=3600)
+        return result
     else:
         response = json.loads(response.decode('utf-8'))
     return response
