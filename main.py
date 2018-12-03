@@ -231,7 +231,7 @@ async def price(ctx):
     last_price[message.channel.id] = datetime.datetime.now()
     msg = await message.channel.send("Retrieving latest prices...")
     embed = discord.Embed(colour=discord.Colour.green())
-    embed.title = "Current Prices - Powered by CoinGecko\t\t"
+    embed.title = "Current Prices - Powered by CoinGecko"
     btc = None
     nano = None
     banano = None
@@ -254,7 +254,7 @@ async def price(ctx):
         embed.description += "```"
         embed.description += f"Rank         : #{banano['rank']}\n"
         embed.description += f"Price  (NANO): 1 NANO = {banano['xrb']:.2f} BAN\n"
-        embed.description += f"Price  (BTC) : {int(banano['satoshi'])} Satoshi\n"
+        embed.description += f"Price  (BTC) : {int(banano['satoshi'])} sats\n"
         embed.description += f"Price  (USD) : ${banano['usdprice']:.6f}\n"
         if settings.VESPRICE:
             embed.description += f"Price (VES)  : {banano['bolivar']:.2f} VES\n"
@@ -277,6 +277,7 @@ async def price(ctx):
         embed.description += "```"
     if btc is not None:
         embed.set_footer(text='1 BTC = ${0:.2f}'.format(btc['usdprice']))
+    embed.add_field(name='                         ', value='                           ')
     await msg.edit(content="", embed=embed)
 
 @client.command()
