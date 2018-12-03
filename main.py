@@ -268,14 +268,14 @@ async def price(ctx):
         embed.description += 'Currently Unavailable\n'
     else:
         embed.description += "```"
-        embed.description += f"Rank          : #{nano['rank']}\n"
-        embed.description += f"Kucoin-BTC    : {nano['kucoin']:.8f} BTC\n"
-        embed.description += f"Binance-BTC   : {nano['binance']:.8f} BTC\n"
-        embed.description += f"Price  (USD)  : ${nano['usdprice']:.2f}\n"
+        embed.description += f"Rank         : #{nano['rank']}\n"
+        embed.description += f"Kucoin  - BTC: {nano['kucoin']:.8f} BTC\n"
+        embed.description += f"Binance - BTC: {nano['binance']:.8f} BTC\n"
+        embed.description += f"Price (USD)  : ${nano['usdprice']:.2f}\n"
         if settings.VESPRICE:
             embed.description += f"Price  (VES)  : {nano['bolivar']:.2f} VES\n"
-            embed.description += f"Volume (24H)  : {nano['volume']:,.2f} BTC\n"
-            embed.description += f"Market Cap    : ${nano['mcap']:,.2f}\n"
+        embed.description += f"Volume (24H) : {nano['volume']:,.2f} BTC\n"
+        embed.description += f"Market Cap   : ${nano['mcap']:,.2f}\n"
         embed.description += "```"
     if btc is not None:
         embed.set_footer(text='1 BTC = ${0:,.2f} | 1 NANO = {1:,.2f} BAN - Market Data Provided by CoinGecko.com'.format(btc['usdprice'], banpernan))
