@@ -38,7 +38,7 @@ async def get_banano_price():
         # Get price and volume
         xrb_prices = []
         btc_prices = []
-        for t in tickers:
+        for t in response['tickers']:
             # Sorry troca, no volume
             if t['market']['identifier'] == 'troca_ninja':
                 continue
@@ -52,7 +52,7 @@ async def get_banano_price():
         volumebtc = float(response["market_data"]["total_volume"]["btc"])
         # Other data
         circ_supply = float(response['market_data']['circulating_supply'])
-        rank = t['market_cap_rank']
+        rank = response['market_cap_rank']
         mcap = float(response['market_data']['market_cap']['usd'])
         ret = {
             "xrb":banpernan,
@@ -85,7 +85,7 @@ async def get_nano_price():
         volumebtc = float(response["market_data"]["total_volume"]["btc"])
         kucoinprice = 0
         binanceprice = 0
-        for t in tickers:
+        for t in response['tickers']:
             if t['market']['identifier'] == 'kucoin' and t['target'] == 'BTC':
                 kucoinprice = float(t['last'])
             elif t['market']['identifier'] == 'binance' and t['target'] == 'BTC':
@@ -93,7 +93,7 @@ async def get_nano_price():
         usdprice = float(response["market_data"]["current_price"]["usd"])
         # Other data
         circ_supply = float(response['market_data']['circulating_supply'])
-        rank = t['market_cap_rank']
+        rank = response['market_cap_rank']
         mcap = float(response['market_data']['market_cap']['usd'])
         ret = {
             "kucoin":kucoinprice,
@@ -140,7 +140,5 @@ async def get_all_prices():
             result = task.result()
             if result is not None:
                 ret.append(task.result())
-    # Sort by price
-    ret.sort(key=lambda tup: tup[1], reverse=True)
     return ret
 
