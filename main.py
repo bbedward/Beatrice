@@ -252,26 +252,28 @@ async def price(ctx):
         if banano['change'] < 0:
             embed.colour=discord.Colour.red()
         embed.description += "```"
-        embed.description += f"Rank         : #{banano['rank']}\n"
+        embed.description += f"Rank         : #{banano['rank']}\t\t\n"
         embed.description += f"Price  (NANO): 1 NANO = {banano['xrb']:.2f} BAN\n"
         embed.description += f"Price  (BTC) : {banano['satoshi']} Satoshi\n"
-        embed.description += f"Volume (24H) : {banano['volume']:.8f} BTC\n"
-        embed.description += f"Market Cap   : ${banano['mcap']:.2f}\n"
+        embed.description += f"Price  (USD) : ${banano['usdprice']:.6f}\n"
         if settings.VESPRICE:
             embed.description += f"Price (VES)  : {banano['bolivar']:.2f} VES\n"
+        embed.description += f"Volume (24H) : {banano['volume']:.8f} BTC\n"
+        embed.description += f"Market Cap   : ${banano['mcap']:.2f}\n"
         embed.description += "```"
     embed.description += "**NANO**\n"
     if nano is None:
         embed.description += 'Currently Unavailable\n'
     else:
         embed.description += "```"
-        embed.description += f"Rank            : #{nano['rank']}\n"
+        embed.description += f"Rank            : #{nano['rank']}\t\t\n"
         embed.description += f"Price  (KUCOIN) : {nano['kucoin']:.8f} BTC\n"
         embed.description += f"Price  (BINANCE): {nano['binance']:.8f} BTC\n"
-        embed.description += f"Volume (24H) : {nano['volume']:.8f} BTC\n"
-        embed.description += f"Market Cap   : ${nano['mcap']:.2f}\n"
+        embed.description += f"Price  (USD)    : ${nano['usdprice']:.2f}\n"
         if settings.VESPRICE:
             embed.description += f"Price (VES)  : {nano['bolivar']:.2f} VES\n"
+        embed.description += f"Volume (24H)    : {nano['volume']:,.8f} BTC\n"
+        embed.description += f"Market Cap      : ${nano['mcap']:.2f}\n"
         embed.description += "```"
     if btc is not None:
         embed.set_footer(text='1 BTC = ${0:.2f}'.format(btc['usdprice']))

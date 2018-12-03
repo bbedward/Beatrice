@@ -47,7 +47,7 @@ async def get_banano_price():
             elif t['target'] == 'BTC':
                 btc_prices.append(float(t['last']))
         banpernan = 1 / (sum(xrb_prices) / len(xrb_prices))
-        satprice = (sum(btc_prices) / len(btc_prices)) * 8
+        satprice = (sum(btc_prices) / len(btc_prices)) * 100000000
         usdprice = float(response["market_data"]["current_price"]["usd"])
         volumebtc = float(response["market_data"]["total_volume"]["btc"])
         # Other data
