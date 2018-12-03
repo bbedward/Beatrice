@@ -271,7 +271,7 @@ async def price(ctx):
         embed.description += f"Price  (BINANCE): {nano['binance']:.8f} BTC\n"
         embed.description += f"Price  (USD)    : ${nano['usdprice']:.2f}\n"
         if settings.VESPRICE:
-            embed.description += f"Price (VES)  : {nano['bolivar']:.2f} VES\n"
+            embed.description += f"Price (VES)     : {nano['bolivar']:.2f} VES\n"
         embed.description += f"Volume (24H)    : {nano['volume']:,.8f} BTC\n"
         embed.description += f"Market Cap      : ${nano['mcap']:,.2f}\n"
         embed.description += "```"
