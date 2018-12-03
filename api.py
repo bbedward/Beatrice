@@ -44,7 +44,7 @@ async def get_banano_price():
                 continue
             if t['target'] == 'XRB':
                 xrb_prices.append(float(t['last']))
-            elif t['target'] == 'BTC:
+            elif t['target'] == 'BTC':
                 btc_prices.append(float(t['last']))
         banpernan = 1 / (sum(xrb_prices) / len(xrb_prices))
         satprice = (sum(btc_prices) / len(btc_prices)) * 8
@@ -119,10 +119,10 @@ async def get_btc_usd():
             rd.set(CG_BTC_CACHE_KEY, json.dumps(response), ex=300) # Cache for 5 minutes
     else:
         response = json.loads(response.decode('utf-8'))
-	if response is None or 'market_data' not in response:
-		return None
+    if response is None or 'market_data' not in response:
+        return None
     usdprice = float(response["market_data"]["current_price"]["usd"])
-	return ("BTC", {"usdprice":usdprice})
+    return ("BTC", {"usdprice":usdprice})
 
 async def get_all_prices():
     """Fires all price requests simultaneously and exits after getting all results. Returns array of results"""

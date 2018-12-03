@@ -235,6 +235,7 @@ async def price(ctx):
     btc = None
     nano = None
     banano = None
+    prices = await api.get_all_prices()
     for item, price in prices:
         if item == 'BTC':
             btc = price
