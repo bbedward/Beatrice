@@ -277,7 +277,7 @@ async def price(ctx):
         embed.description += "```"
     if btc is not None:
         embed.set_footer(text='1 BTC = ${0:.2f}'.format(btc['usdprice']))
-    embed.add_field(name='                         ', value='                           ')
+    embed.add_field(name='\u200b', value='\u200b')
     await msg.edit(content="", embed=embed)
 
 @client.command()
