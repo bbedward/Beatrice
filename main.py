@@ -231,7 +231,7 @@ async def price(ctx):
     last_price[message.channel.id] = datetime.datetime.now()
     msg = await message.channel.send("Retrieving latest prices...")
     embed = discord.Embed(colour=discord.Colour.green())
-    embed.title = "Current Prices - Powered by CoinGecko"
+    embed.title = "Current Prices"
     btc = None
     nano = None
     banano = None
@@ -244,6 +244,7 @@ async def price(ctx):
         elif item == 'BANANO':
             banano = price
     # Display data
+    banpernan = ""
     embed.description = ''
     embed.description += '**BANANO**\n'
     if banano is None:
@@ -256,8 +257,9 @@ async def price(ctx):
         embed.description += f"Price  (NANO): {banano['xrb']:.6f} NANO\n"
         embed.description += f"Price  (BTC) : {int(banano['satoshi'])} sats\n"
         embed.description += f"Price  (USD) : ${banano['usdprice']:.6f}\n"
+        banpernan = 1/banano['xrb']
         if settings.VESPRICE:
-            embed.description += f"Price (VES)  : {banano['bolivar']:.2f} VES\n"
+            embed.description += f"Price  (VES)  : {banano['bolivar']:.2f} VES\n"
         embed.description += f"Volume (24H) : {banano['volume']:,.2f} BTC\n"
         embed.description += f"Market Cap   : ${banano['mcap']:,.2f}\n"
         embed.description += "```"
@@ -276,7 +278,7 @@ async def price(ctx):
             embed.description += f"Market Cap    : ${nano['mcap']:,.2f}\n"
         embed.description += "```"
     if btc is not None:
-        embed.set_footer(text='1 BTC = ${0:,.2f}'.format(btc['usdprice']))
+        embed.set_footer(text='1 BTC = ${0:,.2f} | 1 NANO = ${0:,.2f} BAN - Market Data Provided by CoinGecko.com'.format(btc['usdprice'], banpernan))
     await msg.edit(content="", embed=embed)
 
 @client.command()
