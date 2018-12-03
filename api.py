@@ -3,18 +3,17 @@ import asyncio
 import redis
 import json
 import util
+import settings
 
 logger = util.get_logger("api")
 
-CACHE_MCAP_RESULT_KEY = 'beatrice_cmccache'
-CACHE_CREEPER_KEY = 'beatrice_creepercache'
+CG_BTC_CACHE_KEY = 'beatrice_btccache'
+CG_NANO_CACHE_KEY = 'beatrice_nanocache'
+CG_BAN_CACHE_KEY = 'beatrice_banocache'
 
-BINANCE_URL = 'https://www.binance.com/api/v3/ticker/price?symbol=NANOBTC'
-KUCOIN_URL = 'https://api.kucoin.com/v1/open/tick?symbol=NANO-BTC'
-NANEX_URL = 'https://nanex.co/api/public/ticker/btcnano'
-CGNANO_URL = 'https://api.coingecko.com/api/v3/coins/nano?tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false'
+CGNANO_URL = 'https://api.coingecko.com/api/v3/coins/nano?localization=false&tickers=true&market_data=true&community_data=false&developer_data=false&sparkline=false'
 CGBTC_URL = 'https://api.coingecko.com/api/v3/coins/bitcoin?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false'
-BANANO_URL = 'https://api.creeper.banano.cc/ticker'
+BANANO_URL = 'https://api.coingecko.com/api/v3/coins/banano?localization=false&tickers=true&market_data=true&community_data=false&developer_data=false&sparkline=false'
 
 rd = redis.Redis()
 
@@ -28,70 +27,109 @@ async def json_get(reqUrl):
         return None
 
 async def get_banano_price():
-    response = rd.get(CACHE_CREEPER_KEY)
+    response = rd.get(CG_BAN_CACHE_KEY)
     if response is None:
         response = await json_get(BANANO_URL)
+        if response is not None and 'market_data' in response:
+            rd.set(CG_BAN_CACHE_KEY, json.dumps(response), ex=300) # Cache result for 5 minutes
     else:
         response = json.loads(response.decode('utf-8'))
-    if response is not None and 'data' in response:
-        rd.set(CACHE_CREEPER_KEY, json.dumps(response), ex=300) # Cache result for 5 minutes
-        banpernan = 1 / float(response['data']['quotes']['NANO']['price'])
-        usdprice = float(response['data']['quotes']['USD']['price'])
-        nanovol = float(response['data']['quotes']['NANO']['volume_24h'])
-        btcvol = float(response['data']['quotes']['BTC']['volume_24h'])
-        circ_supply = float(response['data']['circulating_supply'])
-        return (banpernan, float(response['data']['quotes']['BTC']['price']), usdprice, nanovol, btcvol, circ_supply)
-    else:
-        return (None, None, None, None, None, None)
-
-async def get_binance_price():
-    response = await json_get(BINANCE_URL)
-    if response is not None:
-        return ("BINANCE", float(response["price"]))
+    if response is not None and 'market_data' in response:
+        # Get price and volume
+        xrb_prices = []
+        btc_prices = []
+        for t in tickers:
+            # Sorry troca, no volume
+            if t['market']['identifier'] == 'troca_ninja':
+                continue
+            if t['target'] == 'XRB':
+                xrb_prices.append(float(t['last']))
+            elif t['target'] == 'BTC:
+                btc_prices.append(float(t['last']))
+        banpernan = 1 / (sum(xrb_prices) / len(xrb_prices))
+        satprice = (sum(btc_prices) / len(btc_prices)) * 8
+        usdprice = float(response["market_data"]["current_price"]["usd"])
+        volumebtc = float(response["market_data"]["total_volume"]["btc"])
+        # Other data
+        circ_supply = float(response['market_data']['circulating_supply'])
+        rank = t['market_cap_rank']
+        mcap = float(response['market_data']['market_cap']['usd'])
+        ret = {
+            "xrb":banpernan,
+            "satoshi":satprice,
+            "volume":volumebtc,
+            "supply":circ_supply,
+            "rank": rank,
+            "usdprice": usdprice,
+            "mcap": mcap,
+            "change": float(response['market_data']['price_change_24h'])
+        }
+        if settings.VESPRICE:
+            bolivardb = redis.StrictRedis(host='localhost', port=6379, db=2)
+            ret['bolivar'] = usdprice * float(bolivardb.hget("prices", "coingecko:nano-ves").decode('utf-8'))
+        return ("BANANO", ret)
     else:
         return None
 
-async def get_kucoin_price():
-    response = await json_get(KUCOIN_URL)
-    if response is not None:
-        return ("KUCOIN", float(response["data"]["lastDealPrice"]))
-    else:
-        return None
-
-async def get_nanex_price():
-    response = await json_get(NANEX_URL)
-    if response is not None:
-        return ("NANEX", 1 / float(response["last_trade"]))
-    else:
-        return None
-
-async def get_cmc_data():
-    response = await json_get(CGNANO_URL)
+async def get_nano_price():
+    response = rd.get(CG_NANO_CACHE_KEY)
     if response is None:
+        response = await json_get(CGNANO_URL)
+        if response is not None and 'market_data' in response:
+            rd.set(CG_NANO_CACHE_KEY, json.dumps(response), ex=300) # Cache result for 5 minutes
+    else:
+        response = json.loads(response.decode('utf-8'))
+    if response is not None and 'market_data' in response:
+        # Get price and volume
+        btc_prices = []
+        volumebtc = float(response["market_data"]["total_volume"]["btc"])
+        kucoinprice = 0
+        binanceprice = 0
+        for t in tickers:
+            if t['market']['identifier'] == 'kucoin' and t['target'] == 'BTC':
+                kucoinprice = float(t['last'])
+            elif t['market']['identifier'] == 'binance' and t['target'] == 'BTC':
+                binanceprice = float(t['last'])
+        usdprice = float(response["market_data"]["current_price"]["usd"])
+        # Other data
+        circ_supply = float(response['market_data']['circulating_supply'])
+        rank = t['market_cap_rank']
+        mcap = float(response['market_data']['market_cap']['usd'])
+        ret = {
+            "kucoin":kucoinprice,
+            "binance":binanceprice,
+            "volume":volumebtc,
+            "supply":circ_supply,
+            "rank": rank,
+            "usdprice": usdprice,
+            "mcap":mcap
+        }
+        if settings.VESPRICE:
+            bolivardb = redis.StrictRedis(host='localhost', port=6379, db=2)
+            ret['bolivar'] = usdprice * float(bolivardb.hget("prices", "coingecko:nano-ves").decode('utf-8'))
+        return ("NANO", ret)
+    else:
         return None
-    rank = response["market_cap_rank"]
-    usd = "${0:,.2f}".format(float(response["market_data"]["current_price"]["usd"]))
-    mcap = "${0:,}".format(int(response["market_data"]["market_cap"]["usd"]))
-    volume = "${0:,}".format(int(response["market_data"]["total_volume"]["usd"]))
-    resp = ""
-    resp += "```\nRank       : {0}".format(rank)
-    resp += "\nPrice      : {0}".format(usd)
-    resp += "\nMarket Cap : {0}".format(mcap)
-    resp += "\nVolume(24H): {0}```".format(volume)
-    return resp
 
 async def get_btc_usd():
-	response = await json_get(CGBTC_URL)
-	if response is None:
+    response = rd.get(CG_BTC_CACHE_KEY)
+    if response is None:
+        response = await json_get(CGBTC_URL)
+        if response is not None and 'market_data' in response:
+            rd.set(CG_BTC_CACHE_KEY, json.dumps(response), ex=300) # Cache for 5 minutes
+    else:
+        response = json.loads(response.decode('utf-8'))
+	if response is None or 'market_data' not in response:
 		return None
-	return "${0:,.2f}".format(float(response["market_data"]["current_price"]["usd"]))
+    usdprice = float(response["market_data"]["current_price"]["usd"])
+	return ("BTC", {"usdprice":usdprice})
 
 async def get_all_prices():
     """Fires all price requests simultaneously and exits after getting all results. Returns array of results"""
     tasks = [
-        get_binance_price(),
-        get_kucoin_price(),
-        get_nanex_price(),
+        get_nano_price(),
+        get_banano_price(),
+        get_btc_usd()
     ]
 
     ret = []
@@ -105,24 +143,4 @@ async def get_all_prices():
     # Sort by price
     ret.sort(key=lambda tup: tup[1], reverse=True)
     return ret
-
-async def get_cmc_ticker(limit):
-    # Try to retrieve cached version first
-    response = rd.get(CACHE_MCAP_RESULT_KEY)
-    if response is None:
-        # Not in cache, retrieve it from API
-        response = None
-        result = await json_get('https://api.coingecko.com/api/v3/coins/banano?localization=false&tickers=true&market_data=true&community_data=false&developer_data=false&sparkline=false')
-        rd.set(CACHE_MCAP_RESULT_KEY, json.dumps(result), ex=3600)
-        return result
-    else:
-        response = json.loads(response.decode('utf-8'))
-    return response
-
-
-async def get_banano_rank(mcap, limit):
-	ticker = await get_cmc_ticker(limit)
-	if "market_cap_rank" not in ticker:
-		return "N/A"
-	return ticker["market_cap_rank"]
 

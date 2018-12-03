@@ -232,28 +232,47 @@ async def price(ctx):
     msg = await message.channel.send("Retrieving latest prices...")
     embed = discord.Embed(colour=discord.Colour.green())
     embed.title = "Current Prices - Powered by CoinGecko"
-    prices = await api.get_all_prices()
-    pricestr = "{0:.8f} BTC"
-    for exchange, price in prices:
-         embed.add_field(name=exchange, value=pricestr.format(price))
-    cmc = await api.get_cmc_data()
+    btc = None
+    nano = None
+    banano = None
+    for item, price in prices:
+        if item == 'BTC':
+            btc = price
+        elif item == 'NANO':
+            nano = price
+        elif item == 'BANANO':
+            banano = price
+    # Display data
     embed.description = ''
-    if cmc is not None:
-        embed.description += '**NANO**\n'
-        embed.description += cmc
-    banpernan, banperbtc, usdprice, volume, btcvolume, circ_supply = await api.get_banano_price()
-    mcap = circ_supply * usdprice
-    banrank = await api.get_banano_rank(mcap, 1000)
-    if banpernan is not None:
-        embed.add_field(name='BANANO-NANO', value='{0:.2f} BAN : 1 NANO'.format(banpernan))
-        embed.add_field(name='BANANO-BTC', value='{0:.8f} BTC'.format(banperbtc))
-        embed.add_field(name='BAN-NANO 24H Vol.', value='{0:.6f} NANO'.format(volume))
-        embed.add_field(name='BAN-BTC 24H Vol.', value='{0:.4f} BTC'.format(btcvolume))
-        embed.add_field(name='BANANO USD', value='${0:.4f} : 1 BAN'.format(usdprice))
-        embed.add_field(name='BANANO RANK', value='#{0}'.format(banrank))
-    btc_usd = await api.get_btc_usd()
-    if btc_usd is not None:
-        embed.set_footer(text='BANANO Market Cap: ${1:,.2f} | 1 BTC = {0}'.format(btc_usd, mcap))
+    embed.description += '**BANANO**\n'
+    if banano is None:
+        embed.description += 'Currently Unavailable\n'
+    else:
+        if banano['change'] < 0:
+            embed.colour=discord.Colour.red()
+        embed.description += "```"
+        embed.description += f"Rank         : #{banano['rank']}"
+        embed.description += f"Price  (NANO): 1 NANO = {banano['xrb']:.2f} BAN"
+        embed.description += f"Price  (BTC) : {banano['satoshi']} Satoshi"
+        embed.description += f"Volume (24H) : {banano['volume']:.8f} BTC"
+        embed.description += f"Market Cap   : ${banano['mcap']:.2f}"
+        if settings.VESPRICE:
+            embed.description += f"Price (VES)  : {banano['bolivar']:.2f} VES"
+        embed.description += "```"
+    embed.description += "**NANO**\n"
+    if nano is None:
+        embed.description += 'Currently Unavailable\n'
+    else:
+        embed.description += "```"
+        embed.description += f"Rank            : #{nano['rank']}"
+        embed.description += f"Price  (KUCOIN) : {nano['kucoin']:.8f} BTC"
+        embed.description += f"Price  (BINANCE): {nano['binance']:.8f} BTC"
+        embed.description += f"Volume (24H) : {nano['volume']:.8f} BTC"
+        embed.description += f"Market Cap   : ${nano['mcap']:.2f}"
+        if settings.VESPRICE:
+            embed.description += f"Price (VES)  : {nano['bolivar']:.2f} VES"
+    if btc is not None:
+        embed.set_footer(text='1 BTC = {0}'.format(btc['usdprice']))
     await msg.edit(content="", embed=embed)
 
 @client.command()
