@@ -253,12 +253,12 @@ async def price(ctx):
             embed.colour=discord.Colour.red()
         embed.description += "```"
         embed.description += f"Rank         : #{banano['rank']}\n"
-        embed.description += f"Price  (NANO): 1 NANO = {banano['xrb']:.2f} BAN\n"
+        embed.description += f"Price  (NANO): {banano['xrb']:.6f} NANO\n"
         embed.description += f"Price  (BTC) : {int(banano['satoshi'])} sats\n"
         embed.description += f"Price  (USD) : ${banano['usdprice']:.6f}\n"
         if settings.VESPRICE:
             embed.description += f"Price (VES)  : {banano['bolivar']:.2f} VES\n"
-        embed.description += f"Volume (24H) : {banano['volume']:.8f} BTC\n"
+        embed.description += f"Volume (24H) : {banano['volume']:.2f} BTC\n"
         embed.description += f"Market Cap   : ${banano['mcap']:,.2f}\n"
         embed.description += "```"
     embed.description += "**NANO**\n"
@@ -266,18 +266,17 @@ async def price(ctx):
         embed.description += 'Currently Unavailable\n'
     else:
         embed.description += "```"
-        embed.description += f"Rank            : #{nano['rank']}\n"
-        embed.description += f"Price  (KUCOIN) : {nano['kucoin']:.8f} BTC\n"
-        embed.description += f"Price  (BINANCE): {nano['binance']:.8f} BTC\n"
-        embed.description += f"Price  (USD)    : ${nano['usdprice']:.2f}\n"
+        embed.description += f"Rank          : #{nano['rank']}\n"
+        embed.description += f"Kucoin-BTC    : {nano['kucoin']:.8f} BTC\n"
+        embed.description += f"Binance-BTC   : {nano['binance']:.8f} BTC\n"
+        embed.description += f"Price  (USD)  : ${nano['usdprice']:.2f}\n"
         if settings.VESPRICE:
-            embed.description += f"Price (VES)     : {nano['bolivar']:.2f} VES\n"
-        embed.description += f"Volume (24H)    : {nano['volume']:,.8f} BTC\n"
-        embed.description += f"Market Cap      : ${nano['mcap']:,.2f}\n"
+            embed.description += f"Price  (VES)  : {nano['bolivar']:.2f} VES\n"
+            embed.description += f"Volume (24H)  : {nano['volume']:,.2f} BTC\n"
+            embed.description += f"Market Cap    : ${nano['mcap']:,.2f}\n"
         embed.description += "```"
     if btc is not None:
-        embed.set_footer(text='1 BTC = ${0:.2f}'.format(btc['usdprice']))
-    embed.add_field(name='\u200b', value='\u200b')
+        embed.set_footer(text='1 BTC = ${0:,.2f}'.format(btc['usdprice']))
     await msg.edit(content="", embed=embed)
 
 @client.command()
