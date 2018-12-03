@@ -258,7 +258,7 @@ async def price(ctx):
         embed.description += f"Price  (USD) : ${banano['usdprice']:.6f}\n"
         if settings.VESPRICE:
             embed.description += f"Price (VES)  : {banano['bolivar']:.2f} VES\n"
-        embed.description += f"Volume (24H) : {banano['volume']:.2f} BTC\n"
+        embed.description += f"Volume (24H) : {banano['volume']:,.2f} BTC\n"
         embed.description += f"Market Cap   : ${banano['mcap']:,.2f}\n"
         embed.description += "```"
     embed.description += "**NANO**\n"
