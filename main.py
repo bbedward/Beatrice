@@ -253,29 +253,29 @@ async def price(ctx):
         if banano['change'] < 0:
             embed.colour=discord.Colour.red()
         embed.description += "```"
-        embed.description += f"Rank           : #{banano['rank']}\n"
-        embed.description += f"Price  (NANO)  : {banano['xrb']:.6f} NANO\n"
-        embed.description += f"Price  (BTC)   : {int(banano['satoshi'])} sats\n"
-        embed.description += f"Price  (USD)   : ${banano['usdprice']:.6f}\n"
+        embed.description += f"Rank            : #{banano['rank']}\n"
+        embed.description += f"Price  (NANO)   : {banano['xrb']:.6f} NANO\n"
+        embed.description += f"Price  (BTC)    : {int(banano['satoshi'])} sats\n"
+        embed.description += f"Price  (USD)    : ${banano['usdprice']:.6f}\n"
         banpernan = 1/banano['xrb']
         if settings.VESPRICE:
-            embed.description += f"Price  (VES)   : {banano['bolivar']:.2f} Bs.S.\n"
-        embed.description += f"Volume (24H)   : {banano['volume']:,.2f} BTC\n"
-        embed.description += f"Market Cap     : ${int(banano['mcap']):,}\n"
+            embed.description += f"Price  (VES)    : {banano['bolivar']:.2f} Bs.S\n"
+        embed.description += f"Volume (24H)    : {banano['volume']:,.2f} BTC\n"
+        embed.description += f"Market Cap      : ${int(banano['mcap']):,}\n"
         embed.description += "```"
     embed.description += "\n**NANO**"
     if nano is None:
         embed.description += '\nCurrently Unavailable\n'
     else:
         embed.description += "```"
-        embed.description += f"Rank           : #{nano['rank']}\n"
-        embed.description += f"Price (Kucoin) : {nano['kucoin']:.8f} BTC\n"
-        embed.description += f"Price (Binance): {nano['binance']:.8f} BTC\n"
-        embed.description += f"Price (USD)    : ${nano['usdprice']:.2f}\n"
+        embed.description += f"Rank            : #{nano['rank']}\n"
+        embed.description += f"Price  (Kucoin) : {nano['kucoin']:.8f} BTC\n"
+        embed.description += f"Price  (Binance): {nano['binance']:.8f} BTC\n"
+        embed.description += f"Price  (USD)    : ${nano['usdprice']:.2f}\n"
         if settings.VESPRICE:
-            embed.description += f"Price (VES)    : {nano['bolivar']:.2f} Bs.S.\n"
-        embed.description += f"Volume (24H)   : {nano['volume']:,.2f} BTC\n"
-        embed.description += f"Market Cap     : ${int(nano['mcap']):,}\n"
+            embed.description += f"Price  (VES)    : {nano['bolivar']:.2f} Bs.S\n"
+        embed.description += f"Volume (24H)    : {nano['volume']:,.2f} BTC\n"
+        embed.description += f"Market Cap      : ${int(nano['mcap']):,}\n"
         embed.description += "```"
     if btc is not None:
         embed.set_footer(text='1 BTC = ${0:,.2f} | 1 NANO = {1:,.2f} BAN | Market Data Provided by CoinGecko.com'.format(btc['usdprice'], banpernan))
