@@ -155,6 +155,11 @@ async def on_member_join(member):
 		muzzled = discord.utils.get(member.guild.roles,name=settings.muzzled_role)
 		await member.add_roles(muzzled)
 
+@client.event
+async def on_reaction_add(reaction, user):
+	if reaction.emoji == '\u274C' and reaction.count >= 5:
+		await reaction.message.delete()
+		
 # Periodic check job to unsilence users
 async def unsilence_users():
 	try:
