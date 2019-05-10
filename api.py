@@ -37,17 +37,11 @@ async def get_banano_price():
     if response is not None and 'market_data' in response:
         # Get price and volume
         xrb_prices = []
-        btc_prices = []
         for t in response['tickers']:
-            # Sorry troca, no volume
-            if t['market']['identifier'] == 'troca_ninja':
-                continue
             if t['target'] == 'XRB':
                 xrb_prices.append(float(t['last']))
-            elif t['target'] == 'BTC':
-                btc_prices.append(float(t['last']))
         banpernan = sum(xrb_prices) / len(xrb_prices)
-        satprice = (sum(btc_prices) / len(btc_prices)) * 100000000
+        satprice = float(response["market_data"]["current_price"]["btc"])
         usdprice = float(response["market_data"]["current_price"]["usd"])
         volumebtc = float(response["market_data"]["total_volume"]["btc"])
         # Other data
@@ -81,7 +75,6 @@ async def get_nano_price():
         response = json.loads(response.decode('utf-8'))
     if response is not None and 'market_data' in response:
         # Get price and volume
-        btc_prices = []
         volumebtc = float(response["market_data"]["total_volume"]["btc"])
         kucoinprice = 0
         binanceprice = 0
