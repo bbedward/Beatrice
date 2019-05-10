@@ -60,7 +60,7 @@ async def get_banano_price():
         }
         if settings.VESPRICE:
             bolivardb = redis.StrictRedis(host='localhost', port=6379, db=2)
-            ret['bolivar'] = usdprice * float(bolivardb.hget("prices", "coingecko:nano-ves").decode('utf-8'))
+            ret['bolivar'] = usdprice * float(bolivardb.hget("prices", "dolartoday:usd-ves").decode('utf-8'))
         return ("BANANO", ret)
     else:
         return None
@@ -99,7 +99,7 @@ async def get_nano_price():
         }
         if settings.VESPRICE:
             bolivardb = redis.StrictRedis(host='localhost', port=6379, db=2)
-            ret['bolivar'] = usdprice * float(bolivardb.hget("prices", "coingecko:nano-ves").decode('utf-8'))
+            ret['bolivar'] = usdprice * float(bolivardb.hget("prices", "dolartoday:usd-ves").decode('utf-8'))
         return ("NANO", ret)
     else:
         return None
