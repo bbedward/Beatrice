@@ -284,7 +284,7 @@ async def price(ctx):
         embed.description += f"Price  (BTC)    : {int(banano['satoshi'])} sats\n"
         embed.description += f"Price  (USD)    : ${banano['usdprice']:.6f}\n"
         banpernan = 1/banano['xrb']
-        if settings.VESPRICE:
+        if settings.VESPRICE and 'bolivar' in banano:
             embed.description += f"Price  (VES)    : {banano['bolivar']:.2f} Bs.S\n"
         embed.description += f"Volume (24H)    : {banano['volume']:,.2f} BTC\n"
         embed.description += f"Market Cap      : ${int(banano['mcap']):,}\n"
@@ -298,7 +298,7 @@ async def price(ctx):
         embed.description += f"Price  (Kucoin) : {nano['kucoin']:.8f} BTC\n"
         embed.description += f"Price  (Binance): {nano['binance']:.8f} BTC\n"
         embed.description += f"Price  (USD)    : ${nano['usdprice']:.2f}\n"
-        if settings.VESPRICE:
+        if settings.VESPRICE and 'bolivar' in nano:
             embed.description += f"Price  (VES)    : {nano['bolivar']:.2f} Bs.S\n"
         embed.description += f"Volume (24H)    : {nano['volume']:,.2f} BTC\n"
         embed.description += f"Market Cap      : ${int(nano['mcap']):,}\n"
@@ -651,7 +651,7 @@ async def kick(ctx):
     message = ctx.message
     if not is_admin(message.author):
         return
-    logchannel = await message.guild.get_channel(settings.KICK_LOG)
+    logchannel = message.guild.get_channel(settings.KICK_LOG)
     # Check if they are beyond threshold
     redis = await util.get_redis()
     kick_count = await redis.get(f"kickcount_{message.author.id}")
@@ -700,7 +700,7 @@ async def ban(ctx):
     message = ctx.message
     if not is_admin(message.author):
         return
-    logchannel = await message.guild.get_channel(settings.KICK_LOG)
+    logchannel = message.guild.get_channel(settings.KICK_LOG)
     # Check if they are beyond threshold
     redis = await util.get_redis()
     ban_count = await redis.get(f"bancount_{message.author.id}")

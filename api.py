@@ -58,7 +58,10 @@ async def get_banano_price():
         }
         if settings.VESPRICE:
             bolivardb = await util.get_redis(db=2)
-            ret['bolivar'] = usdprice * float(await bolivardb.hget("prices", "dolartoday:usd-ves"))
+            bolivarprice = await bolivardb.hget("prices", "dolartoday:usd-ves")
+            if bolivarprice is not None:
+                ret['bolivar'] = usdprice * float(bolivarprice)
+
         return ("BANANO", ret)
     else:
         return None
@@ -98,7 +101,9 @@ async def get_nano_price():
         }
         if settings.VESPRICE:
             bolivardb = await util.get_redis(db=2)
-            ret['bolivar'] = usdprice * float(await bolivardb.hget("prices", "dolartoday:usd-ves"))
+            bolivarprice = await bolivardb.hget("prices", "dolartoday:usd-ves")
+            if bolivarprice is not None:
+                ret['bolivar'] = usdprice * float(bolivarprice)
         return ("NANO", ret)
     else:
         return None
