@@ -28,3 +28,5 @@ TROLL="```You have been marked as a TROLL and are no longer a Citizen in the Ban
 UNTROLL="```You are no longer known as a TROLL in the Banano Republic, please reapply for Citizenship.```"
 # Bolivar price (you probably dont want to do this yourself)
 VESPRICE=False
+# Kick/BAN log channel (will log who kicked who)
+KICK_LOG=633355534535491605

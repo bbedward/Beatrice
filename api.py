@@ -1,6 +1,5 @@
 import aiohttp
 import asyncio
-import redis
 import json
 import util
 import settings
@@ -15,8 +14,6 @@ CGNANO_URL = 'https://api.coingecko.com/api/v3/coins/nano?localization=false&tic
 CGBTC_URL = 'https://api.coingecko.com/api/v3/coins/bitcoin?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false'
 BANANO_URL = 'https://api.coingecko.com/api/v3/coins/banano?localization=false&tickers=true&market_data=true&community_data=false&developer_data=false&sparkline=false'
 
-rd = redis.Redis()
-
 async def json_get(reqUrl):
     try:
         async with aiohttp.ClientSession() as session:
@@ -27,13 +24,14 @@ async def json_get(reqUrl):
         return None
 
 async def get_banano_price():
-    response = rd.get(CG_BAN_CACHE_KEY)
+    redis = await util.get_redis()
+    response = await redis.get(CG_BAN_CACHE_KEY)
     if response is None:
         response = await json_get(BANANO_URL)
         if response is not None and 'market_data' in response:
-            rd.set(CG_BAN_CACHE_KEY, json.dumps(response), ex=300) # Cache result for 5 minutes
+            await redis.set(CG_BAN_CACHE_KEY, json.dumps(response), expire=300) # Cache result for 5 minutes
     else:
-        response = json.loads(response.decode('utf-8'))
+        response = json.loads(response)
     if response is not None and 'market_data' in response:
         # Get price and volume
         xrb_prices = []
@@ -66,13 +64,14 @@ async def get_banano_price():
         return None
 
 async def get_nano_price():
-    response = rd.get(CG_NANO_CACHE_KEY)
+    redis = await util.get_redis()
+    response = await redis.get(CG_NANO_CACHE_KEY)
     if response is None:
         response = await json_get(CGNANO_URL)
         if response is not None and 'market_data' in response:
-            rd.set(CG_NANO_CACHE_KEY, json.dumps(response), ex=300) # Cache result for 5 minutes
+            await redis.set(CG_NANO_CACHE_KEY, json.dumps(response), expire=300) # Cache result for 5 minutes
     else:
-        response = json.loads(response.decode('utf-8'))
+        response = json.loads(response)
     if response is not None and 'market_data' in response:
         # Get price and volume
         volumebtc = float(response["market_data"]["total_volume"]["btc"])
@@ -105,13 +104,14 @@ async def get_nano_price():
         return None
 
 async def get_btc_usd():
-    response = rd.get(CG_BTC_CACHE_KEY)
+    redis = await util.get_redis()
+    response = await redis.get(CG_BTC_CACHE_KEY)
     if response is None:
         response = await json_get(CGBTC_URL)
         if response is not None and 'market_data' in response:
-            rd.set(CG_BTC_CACHE_KEY, json.dumps(response), ex=300) # Cache for 5 minutes
+            await redis.set(CG_BTC_CACHE_KEY, json.dumps(response), expire=300) # Cache for 5 minutes
     else:
-        response = json.loads(response.decode('utf-8'))
+        response = json.loads(response)
     if response is None or 'market_data' not in response:
         return None
     usdprice = float(response["market_data"]["current_price"]["usd"])

@@ -13,7 +13,7 @@ import paginator
 
 logger = util.get_logger("main")
 
-BOT_VERSION = "0.2"
+BOT_VERSION = "1.0"
 
 # Spam Threshold (Seconds) - how long to output certain commands (e.g. price)
 SPAM_THRESHOLD=300
@@ -109,10 +109,20 @@ UNMUTE = {
         "INFO"     : "Unmute mentioned user(s)" 
 }
 
+KICK = {
+        "CMD"       : "{0}kick, takes: user ID(s)".format(COMMAND_PREFIX),
+        "INFO"      : "kick 397868283870707713 303599885800964097 = kick user 303599885800964097 and user 397868283870707713"
+}
+
+BAN = {
+        "CMD"       : "{0}ban, takes: user ID(s)".format(COMMAND_PREFIX),
+        "INFO"      : "kick 397868283870707713 303599885800964097 = kick user 303599885800964097 and user 397868283870707713"
+}
+
 ### Dictionary of different command categories
 COMMANDS = {
 		"USER_COMMANDS"          : [PRICE, MEME, MEMELIST, PUP, PUPLIST, MEOW, MEOWLIST],
-        "ADMIN_COMMANDS"         : [ADDPUP, ADDMEME, ADDMEOW, REMOVEPUP, REMOVEMEME, REMOVEMEOW, MUTE, UNMUTE],
+        "ADMIN_COMMANDS"         : [ADDPUP, ADDMEME, ADDMEOW, REMOVEPUP, REMOVEMEME, REMOVEMEOW, MUTE, UNMUTE, KICK, BAN],
 }
 
 # Create discord client
@@ -201,6 +211,17 @@ def is_admin(user):
             if has_admin_role(m.roles):
                 return True
     return False
+
+def is_bannable(user):
+    """Returns true if user does not have any special roles"""
+    if str(user.id) in settings.admin_ids:
+        return False
+    for m in client.get_all_members():
+        if m.id == user.id:
+            for role in m.roles:
+                if role.name.lower() not in ['BANANO JAIL', 'muzzled']:
+                    return False
+    return True
 
 def valid_url(url):
     # TODO we should check content-type header with aiohttp
@@ -625,7 +646,81 @@ async def deport(ctx):
 				await post_response(message, settings.DEPORT, mention_id=member.id)
 			await message.add_reaction('\U0001F6F3')
 
+@client.command()
+async def kick(ctx):
+    message = ctx.message
+    if not is_admin(message.author):
+        return
+    logchannel = await message.guild.get_channel(settings.KICK_LOG)
+    # Check if they are beyond threshold
+    redis = await util.get_redis()
+    kick_count = await redis.get(f"kickcount_{message.author.id}")
+    if kick_count is not None:
+        if int(kick_count) > 15:
+            await logchannel.send(f"<@{message.author.id}> is kicking people excessively! <@303599885800964097>")
+    # Get kick list
+    to_kick = message.content.split(' ')
+    kicked_users = []
+    for kickee_id in to_kick:
+        member = message.guild.get_member(kickee_id)
+        if is_admin(member):
+            continue
+        kicked_users.append(kickee_id)
+        await message.guild.kick(kickee_id)
+    if len(kicked_users) == 0:
+        return
+    # Log incident
+    if len(kicked_users) > 15:
+        await logchannel.send(f"<@{message.author.id}> is kicking people excessively! <@303599885800964097>")
+    kick_count = await redis.get(f"kickcount_{message.author.id}")
+    total_kicked = len(kicked_users)
+    if kick_count is not None:
+        total_kicked += int(kick_count)
+    # Keep kick count in redis for 10 minutes
+    await redis.set(f"kickcount_{message.author.id}", str(total_kicked), expire=600)
+    # Log in channel
+    user_list_str = ""
+    for x in kicked_users:
+        user_list_str += f"<@{x}> "
+    await logchannel.send(f"<@{message.author.id}> KICKED {len(kicked_users)} users: {user_list_str}")
 
+@client.command()
+async def ban(ctx):
+    message = ctx.message
+    if not is_admin(message.author):
+        return
+    logchannel = await message.guild.get_channel(settings.KICK_LOG)
+    # Check if they are beyond threshold
+    redis = await util.get_redis()
+    ban_count = await redis.get(f"bancount_{message.author.id}")
+    if ban_count is not None:
+        if int(ban_count) > 10:
+            await logchannel.send(f"<@{message.author.id}> is banning people excessively! <@303599885800964097>")
+    # Get ban list
+    to_ban = message.content.split(' ')
+    banned_users = []
+    for banee_id in to_ban:
+        member = message.guild.get_member(banee_id)
+        if not is_bannable(member):
+            continue
+        banned_users.append(banee_id)
+        await message.guild.ban(banee_id)
+    if len(banned_users) == 0:
+        return
+    # Log incident
+    if len(banned_users) > 10:
+        await logchannel.send(f"<@{message.author.id}> is banning people excessively! <@303599885800964097>")
+    ban_count = await redis.get(f"bancount_{message.author.id}")
+    total_banned = len(banned_users)
+    if ban_count is not None:
+        total_banned += int(ban_count)
+    # Keep ban count in redis for 5 minutes
+    await redis.set(f"bancount_{message.author.id}", str(total_banned), expire=300)
+    # Log in channel
+    user_list_str = ""
+    for x in banned_users:
+        user_list_str += f"<@{x}> "
+    await logchannel.send(f"<@{message.author.id}> BANNED {len(banned_users)} users: {user_list_str}")
 
 ### Re-Used Discord Functions
 async def post_response(message, template, *args, mention_id=None):
