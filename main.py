@@ -744,6 +744,14 @@ async def ban(ctx):
         user_list_str += f"<@{x}> "
     await logchannel.send(f"<@{message.author.id}> BANNED {len(banned_users)} users: {user_list_str}")
 
+@client.command()
+async def ids(ctx):
+    message = ctx.message
+    resp = ""
+    for men in message.mentions:
+        resp += f"{men.id} "
+    await message.author.send(f"{resp.strip()}")
+
 ### Re-Used Discord Functions
 async def post_response(message, template, *args, mention_id=None):
     if mention_id is None:
