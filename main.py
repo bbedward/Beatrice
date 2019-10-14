@@ -717,7 +717,7 @@ async def ban(ctx):
         else:
             try:
                 banid = int(split)
-                banid.append(banid)
+                to_ban.append(banid)
             except ValueError:
                 pass
     banned_users = []
