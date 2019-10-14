@@ -214,17 +214,13 @@ def is_admin(user):
 
 def is_bannable(user):
     """Returns true if user does not have any special roles"""
-    logger.info(f"Checking if {user.name} is bannable")
     if str(user.id) in settings.admin_ids:
-        logger.info("IS ADMIN")
         return False
     for m in client.get_all_members():
         if m.id == user.id:
             for role in m.roles:
-                if role.name.lower() not in ['banano jail', 'muzzled']:
-                    logger.info(f"has role {role.name.lower()}, returning false")
+                if role.name.lower() not in ['banano jail', 'muzzled', '@everyone']:
                     return False
-    logger.info("Is definitely bannable")
     return True
 
 def valid_url(url):
