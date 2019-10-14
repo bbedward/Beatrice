@@ -19,10 +19,10 @@ def get_logger(name, log_file='debug.log'):
 
 redis = None
 
-async def get_redis():
+async def get_redis(db=None):
 	global redis
 	if redis:
 		return redis
-	redis = await aioredis.create_redis_pool(('localhost', 6379), encoding='utf-8', minsize=2, maxsize=50)
+	redis = await aioredis.create_redis_pool(('localhost', 6379), db=db, encoding='utf-8', minsize=2, maxsize=50)
 	return redis
 	

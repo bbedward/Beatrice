@@ -57,8 +57,8 @@ async def get_banano_price():
             "change": float(response['market_data']['price_change_24h'])
         }
         if settings.VESPRICE:
-            bolivardb = redis.StrictRedis(host='localhost', port=6379, db=2)
-            ret['bolivar'] = usdprice * float(bolivardb.hget("prices", "dolartoday:usd-ves").decode('utf-8'))
+            bolivardb = await util.get_redis(db=2)
+            ret['bolivar'] = usdprice * float(await bolivardb.hget("prices", "dolartoday:usd-ves"))
         return ("BANANO", ret)
     else:
         return None
@@ -97,8 +97,8 @@ async def get_nano_price():
             "mcap":mcap
         }
         if settings.VESPRICE:
-            bolivardb = redis.StrictRedis(host='localhost', port=6379, db=2)
-            ret['bolivar'] = usdprice * float(bolivardb.hget("prices", "dolartoday:usd-ves").decode('utf-8'))
+            bolivardb = await util.get_redis(db=2)
+            ret['bolivar'] = usdprice * float(await bolivardb.hget("prices", "dolartoday:usd-ves"))
         return ("NANO", ret)
     else:
         return None
