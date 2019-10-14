@@ -110,12 +110,12 @@ UNMUTE = {
 }
 
 KICK = {
-        "CMD"       : "{0}kick, takes: user ID(s)".format(COMMAND_PREFIX),
-        "INFO"      : "kick 397868283870707713 303599885800964097 = kick user 303599885800964097 and user 397868283870707713"
+        "CMD"       : "{0}kick, takes: user ID(s), reason (optional)".format(COMMAND_PREFIX),
+        "INFO"      : "kick 397868283870707713 303599885800964097 reason='You Suck' = kick user 303599885800964097 and user 397868283870707713"
 }
 
 BAN = {
-        "CMD"       : "{0}ban, takes: user ID(s)".format(COMMAND_PREFIX),
+        "CMD"       : "{0}ban, takes: user ID(s), reason (optional))".format(COMMAND_PREFIX),
         "INFO"      : "kick 397868283870707713 303599885800964097 = kick user 303599885800964097 and user 397868283870707713"
 }
 
@@ -659,14 +659,25 @@ async def kick(ctx):
         if int(kick_count) > 15:
             await logchannel.send(f"<@{message.author.id}> is kicking people excessively! <@303599885800964097>")
     # Get kick list
-    to_kick = message.content.split(' ')
+    raw_content = message.content.split(' ')
+    to_kick = []
+    reason=None
+    for split in raw_content:
+        if split.startswith('reason='):
+            reason = split.replace('reason=','').strip()
+        else:
+            try:
+                kick_id = int(split)
+                to_kick.append(kick_id)
+            except ValueError:
+                pass
     kicked_users = []
     for kickee_id in to_kick:
         member = message.guild.get_member(kickee_id)
         if is_admin(member):
             continue
         kicked_users.append(kickee_id)
-        await message.guild.kick(kickee_id)
+        await message.guild.kick(kickee_id, reason=reason)
     if len(kicked_users) == 0:
         return
     # Log incident
@@ -697,14 +708,25 @@ async def ban(ctx):
         if int(ban_count) > 10:
             await logchannel.send(f"<@{message.author.id}> is banning people excessively! <@303599885800964097>")
     # Get ban list
-    to_ban = message.content.split(' ')
+    raw_content = message.content.split(' ')
+    to_ban = []
+    reason=None
+    for split in raw_content:
+        if split.startswith('reason='):
+            reason = split.replace('reason=','').strip()
+        else:
+            try:
+                banid = int(split)
+                banid.append(banid)
+            except ValueError:
+                pass
     banned_users = []
     for banee_id in to_ban:
         member = message.guild.get_member(banee_id)
         if not is_bannable(member):
             continue
         banned_users.append(banee_id)
-        await message.guild.ban(banee_id)
+        await message.guild.ban(banee_id, reason=reason)
     if len(banned_users) == 0:
         return
     # Log incident
