@@ -679,6 +679,7 @@ async def kick(ctx):
         kicked_users.append(kickee_id)
         await message.guild.kick(member, reason=reason)
     if len(kicked_users) == 0:
+        await message.author.send(f"No users to kick, {to_kick} users are inelligble")
         return
     # Log incident
     if len(kicked_users) > 15:
@@ -728,6 +729,7 @@ async def ban(ctx):
         banned_users.append(banee_id)
         await message.guild.ban(member, reason=reason)
     if len(banned_users) == 0:
+        await message.author.send(f"No users to ban, {to_ban} users are inelligble")
         return
     # Log incident
     if len(banned_users) > 10:
