@@ -674,10 +674,10 @@ async def kick(ctx):
     kicked_users = []
     for kickee_id in to_kick:
         member = message.guild.get_member(kickee_id)
-        if is_admin(member):
+        if member is None or is_admin(member):
             continue
         kicked_users.append(kickee_id)
-        await message.guild.kick(kickee_id, reason=reason)
+        await message.guild.kick(member, reason=reason)
     if len(kicked_users) == 0:
         return
     # Log incident
@@ -723,10 +723,10 @@ async def ban(ctx):
     banned_users = []
     for banee_id in to_ban:
         member = message.guild.get_member(banee_id)
-        if not is_bannable(member):
+        if member is None or not is_bannable(member):
             continue
         banned_users.append(banee_id)
-        await message.guild.ban(banee_id, reason=reason)
+        await message.guild.ban(member, reason=reason)
     if len(banned_users) == 0:
         return
     # Log incident
