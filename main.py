@@ -694,7 +694,7 @@ async def kick(ctx):
     user_list_str = ""
     for x in kicked_users:
         user_list_str += f"<@{x}> "
-    await logchannel.send(f"<@{message.author.id}> KICKED {len(kicked_users)} users: {user_list_str}")
+    await logchannel.send(f"<@{message.author.id}> KICKED {len(kicked_users)} users: {user_list_str} reason: {'Not Specified' if not reason else reason}")
 
 @client.command()
 async def ban(ctx):
@@ -744,7 +744,7 @@ async def ban(ctx):
     user_list_str = ""
     for x in banned_users:
         user_list_str += f"<@{x}> "
-    await logchannel.send(f"<@{message.author.id}> BANNED {len(banned_users)} users: {user_list_str}")
+    await logchannel.send(f"<@{message.author.id}> BANNED {len(banned_users)} users: {user_list_str} reason: {'Not Specified' if not reason else reason}")
 
 @client.command()
 async def ids(ctx):
