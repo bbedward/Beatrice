@@ -658,21 +658,33 @@ async def kick(ctx):
     if kick_count is not None:
         if int(kick_count) > 15:
             await logchannel.send(f"<@{message.author.id}> is kicking people excessively! <@303599885800964097>")
+    # Extract reason from text
+    reason=None
+    if 'reason=' in message.content:
+        idx = message.content.index('reason=')
+        if message.content[idx+7] == '"' or message.content[idx+7] == "'":
+            firstidx = idx+8
+            lastidx = message.content.rindex(message.content[idx+7])
+        else:
+            firstidx = idx+7
+            for i in range(idx, len(message.content)):
+                if i == len(message.content) - 1:
+                    lastidx = i
+                    break
+                if message.content[i] == ' ':
+                    lastidx = i - 1
+                    break
+        reason = message.content[idx:lastidx]
+        message.content = message.content[0:idx:] + message.content[lastidx+1:]
     # Get kick list
     raw_content = message.content.split(' ')
     to_kick = []
-    reason=None
     for split in raw_content:
-        if split.startswith('reason='):
-            reason = split.replace('reason=','').replace("\"", "")
-        elif split.endswith("\""):
-            reason = reason + split.replace("\"", "")
-        else:
-            try:
-                kick_id = int(split)
-                to_kick.append(kick_id)
-            except ValueError:
-                pass
+        try:
+            kick_id = int(split)
+            to_kick.append(kick_id)
+        except ValueError:
+            pass
     kicked_users = []
     for kickee_id in to_kick:
         member = message.guild.get_member(kickee_id)
@@ -710,21 +722,34 @@ async def ban(ctx):
     if ban_count is not None:
         if int(ban_count) > 10:
             await logchannel.send(f"<@{message.author.id}> is banning people excessively! <@303599885800964097>")
+    # Extract reason from text
+    reason=None
+    if 'reason=' in message.content:
+        idx = message.content.index('reason=')
+        if message.content[idx+7] == '"' or message.content[idx+7] == "'":
+            firstidx = idx+8
+            lastidx = message.content.rindex(message.content[idx+7])
+        else:
+            firstidx = idx+7
+            for i in range(idx, len(message.content)):
+                if i == len(message.content) - 1:
+                    lastidx = i
+                    break
+                if message.content[i] == ' ':
+                    lastidx = i - 1
+                    break
+        reason = message.content[idx:lastidx]
+        message.content = message.content[0:idx:] + message.content[lastidx+1:]
     # Get ban list
     raw_content = message.content.split(' ')
     to_ban = []
     reason=None
     for split in raw_content:
-        if split.startswith('reason='):
-            reason = split.replace('reason=','').replace("\"", "")
-        elif split.endswith("\""):
-            reason = reason + split.replace("\"", "")
-        else:
-            try:
-                banid = int(split)
-                to_ban.append(banid)
-            except ValueError:
-                pass
+        try:
+            banid = int(split)
+            to_ban.append(banid)
+        except ValueError:
+            pass
     banned_users = []
     for banee_id in to_ban:
         member = message.guild.get_member(banee_id)
