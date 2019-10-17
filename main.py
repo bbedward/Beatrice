@@ -664,7 +664,9 @@ async def kick(ctx):
     reason=None
     for split in raw_content:
         if split.startswith('reason='):
-            reason = split.replace('reason=','').strip()
+            reason = split.replace('reason=','').replace("\"", "").strip()
+        elif split.endswith("\""):
+            reason += split
         else:
             try:
                 kick_id = int(split)
@@ -714,7 +716,9 @@ async def ban(ctx):
     reason=None
     for split in raw_content:
         if split.startswith('reason='):
-            reason = split.replace('reason=','').strip()
+            reason = split.replace('reason=','').replace("\"", "").strip()
+        elif split.endswith("\""):
+            reason += split
         else:
             try:
                 banid = int(split)
