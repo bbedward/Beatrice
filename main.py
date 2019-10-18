@@ -743,7 +743,6 @@ async def ban(ctx):
     # Get ban list
     raw_content = message.content.split(' ')
     to_ban = []
-    reason=None
     for split in raw_content:
         try:
             banid = int(split)
