@@ -662,19 +662,13 @@ async def kick(ctx):
     reason=None
     if 'reason=' in message.content:
         idx = message.content.index('reason=')
-        if message.content[idx+7] == '"' or message.content[idx+7] == "'":
+        if message.content[idx+7] == '"' or message.content[idx+7] == "'" or message.content[idx+7] == '”':
             firstidx = idx+8
-            lastidx = message.content.rindex(message.content[idx+7])
+            lastidx = max([message.content.rindex('"') if '"' in message.content else -1, message.content.rindex('\'') if '\'' in message.content else -1, message.content.rindex('”') if '”' in message.content else -1])
         else:
             firstidx = idx+7
-            for i in range(idx, len(message.content)):
-                if i == len(message.content) - 1:
-                    lastidx = i
-                    break
-                if message.content[i] == ' ':
-                    lastidx = i - 1
-                    break
-        reason = message.content[idx:lastidx]
+            lastidx = len(message.content)
+        reason = message.content[firstidx:lastidx]
         message.content = message.content[0:idx:] + message.content[lastidx+1:]
     # Get kick list
     raw_content = message.content.split(' ')
@@ -726,19 +720,13 @@ async def ban(ctx):
     reason=None
     if 'reason=' in message.content:
         idx = message.content.index('reason=')
-        if message.content[idx+7] == '"' or message.content[idx+7] == "'":
+        if message.content[idx+7] == '"' or message.content[idx+7] == "'" or message.content[idx+7] == '”':
             firstidx = idx+8
-            lastidx = message.content.rindex(message.content[idx+7])
+            lastidx = max([message.content.rindex('"') if '"' in message.content else -1, message.content.rindex('\'') if '\'' in message.content else -1, message.content.rindex('”') if '”' in message.content else -1])
         else:
             firstidx = idx+7
-            for i in range(idx, len(message.content)):
-                if i == len(message.content) - 1:
-                    lastidx = i
-                    break
-                if message.content[i] == ' ':
-                    lastidx = i - 1
-                    break
-        reason = message.content[idx:lastidx]
+            lastidx = len(message.content)
+        reason = message.content[firstidx:lastidx]
         message.content = message.content[0:idx:] + message.content[lastidx+1:]
     # Get ban list
     raw_content = message.content.split(' ')
