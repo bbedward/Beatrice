@@ -743,7 +743,7 @@ async def ban(ctx):
         if member is None or not is_bannable(member):
             continue
         banned_users.append(banee_id)
-        await message.guild.ban(member, reason=reason)
+        await message.guild.ban(member, reason=reason, delete_message_days=0)
     if len(banned_users) == 0:
         await message.author.send(f"No users to ban, {len(to_ban)} users are inelligble")
         return
