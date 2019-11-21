@@ -202,14 +202,12 @@ def has_admin_role(roles):
             return True
     return False
 
-def is_admin(user):
+def is_admin(member):
     """Returns true if user is an admin"""
-    if str(user.id) in settings.admin_ids:
+    if str(member.id) in settings.admin_ids:
         return True
-    for m in client.get_all_members():
-        if m.id == user.id:
-            if has_admin_role(m.roles):
-                return True
+    elif has_admin_role(member.roles):
+        return True
     return False
 
 def is_bannable(user):
@@ -219,7 +217,7 @@ def is_bannable(user):
     for m in client.get_all_members():
         if m.id == user.id:
             for role in m.roles:
-                if role.name.lower() not in ['banano jail', 'muzzled', '@everyone']:
+                if role.name.lower() not in ['banano jail', 'muzzled', '@everyone', 'citizens', 'troll']:
                     return False
     return True
 
