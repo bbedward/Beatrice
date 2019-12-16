@@ -167,7 +167,7 @@ async def on_member_join(member):
 
 @client.event
 async def on_reaction_add(reaction, user):
-	if reaction.emoji == '\u274C' and reaction.count >= 5:
+	if reaction.emoji == '\u274C' and reaction.count >= 5 and reaction.message.channel.id == 585626036574748684:
 		await reaction.message.delete()
 		
 # Periodic check job to unsilence users
