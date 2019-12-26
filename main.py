@@ -673,7 +673,7 @@ async def kick(ctx):
     to_kick = []
     for split in raw_content:
         try:
-            kick_id = int(split)
+            kick_id = int(split.strip())
             to_kick.append(kick_id)
         except ValueError:
             pass
@@ -731,7 +731,7 @@ async def ban(ctx):
     to_ban = []
     for split in raw_content:
         try:
-            banid = int(split)
+            banid = int(split.strip())
             to_ban.append(banid)
         except ValueError:
             pass
