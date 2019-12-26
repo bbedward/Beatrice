@@ -669,6 +669,7 @@ async def kick(ctx):
         reason = message.content[firstidx:lastidx]
         message.content = message.content[0:idx:] + message.content[lastidx+1:]
     # Get kick list
+    message.content = ' '.join(message.content.split('\n'))
     raw_content = message.content.split(' ')
     to_kick = []
     for split in raw_content:
@@ -727,6 +728,7 @@ async def ban(ctx):
         reason = message.content[firstidx:lastidx]
         message.content = message.content[0:idx:] + message.content[lastidx+1:]
     # Get ban list
+    message.content = ' '.join(message.content.split('\n'))
     raw_content = message.content.split(' ')
     to_ban = []
     for split in raw_content:
