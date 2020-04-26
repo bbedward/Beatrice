@@ -1,6 +1,7 @@
 import logging
 import logging.handlers
 import aioredis
+import os
 
 def get_logger(name, log_file='debug.log'):
 	formatter = logging.Formatter('%(asctime)s [%(name)s] -%(levelname)s- %(message)s')
@@ -27,7 +28,7 @@ async def get_redis(db=None):
 		return redis
 	elif redisdb2 and db == 2:
 		return redisdb2
-	lr = await aioredis.create_redis_pool(('localhost', 6379), db=db, encoding='utf-8', minsize=2, maxsize=50)
+	lr = await aioredis.create_redis_pool((os.getenv('REDIS_HOST', 'localhost'), 6379), db=db, encoding='utf-8', minsize=2, maxsize=50)
 	if db is None:
 		redis = lr
 		return redis

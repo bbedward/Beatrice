@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: beatrice
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: beatrice
+  template:
+    metadata:
+      labels:
+        app: beatrice
+    spec:
+      containers:
+      - name: beatrice
+        image: replaceme
+        ports:
+        - containerPort: 11337
+          name: api
+        command: ["/bin/bash", "-c"]
+        args: ["cp /config/settings.py .; python main.py"]
+        env:
+          - name: REDIS_HOST
+            value: redis-0.redis
+          - name: BOT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: beatrice
+                key: bot_token
+        volumeMounts:
+        - name: conf
+          mountPath: /config
+          readOnly: true
+      volumes:
+      - name: conf
+        configMap:
+          name: beatrice
+          defaultMode: 0755
