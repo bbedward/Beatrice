@@ -1,6 +1,7 @@
 import requests
 import redis
 import os
+import json
 
 rdata = redis.StrictRedis(host=os.getenv(
     'REDIS_HOST', 'localhost'), port=6379)
