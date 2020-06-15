@@ -25,6 +25,8 @@ spec:
         env:
           - name: REDIS_HOST
             value: redis-0.redis
+          - name: DB_PATH
+            value: /database/discord.db
           - name: BOT_TOKEN
             valueFrom:
               secretKeyRef:
@@ -34,8 +36,15 @@ spec:
         - name: conf
           mountPath: /config
           readOnly: true
+        volumeMounts:
+        - name: database
+          mountPath: /database
+          readOnly: false
       volumes:
       - name: conf
         configMap:
           name: beatrice
           defaultMode: 0755
+      - name: database
+        persistentVolumeClaim:
+          claimName: database

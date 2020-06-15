@@ -1,7 +1,8 @@
 import datetime
 from peewee import SqliteDatabase, Model, CharField, IntegerField, DateTimeField
+import os
 
-db = SqliteDatabase('discord.db')
+db = SqliteDatabase(os.getenv('DB_PATH', 'discord.db'))
 
 ### Logic
 def meme_exists(url):
