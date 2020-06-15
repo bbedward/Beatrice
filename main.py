@@ -11,7 +11,7 @@ import db
 import util
 import paginator
 
-logger = util.get_logger("main")
+logger = util.get_logger("discord")
 
 BOT_VERSION = "1.0"
 
@@ -249,10 +249,11 @@ async def price(ctx):
     if message.channel.id not in last_price:
         last_price[message.channel.id] = datetime.datetime.now()
     tdelta = datetime.datetime.now() - last_price[message.channel.id]
-    if SPAM_THRESHOLD > tdelta.seconds:
-        await message.author.send("No more price for {0} seconds".format(SPAM_THRESHOLD - tdelta.seconds))
-        return
-    last_price[message.channel.id] = datetime.datetime.now()
+    if message.author.id != 303599885800964097:
+        if SPAM_THRESHOLD > tdelta.seconds:
+            await message.author.send("No more price for {0} seconds".format(SPAM_THRESHOLD - tdelta.seconds))
+            return
+        last_price[message.channel.id] = datetime.datetime.now()
     msg = await message.channel.send("Retrieving latest prices...")
     embed = discord.Embed(colour=discord.Colour.green())
     embed.title = "Current Prices"

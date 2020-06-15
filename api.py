@@ -4,7 +4,7 @@ import json
 import util
 import settings
 
-logger = util.get_logger("api")
+logger = util.get_logger("discord")
 
 CG_BTC_CACHE_KEY = 'beatrice_btccache'
 CG_NANO_CACHE_KEY = 'beatrice_nanocache'
