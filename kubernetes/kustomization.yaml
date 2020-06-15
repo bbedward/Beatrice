@@ -5,3 +5,4 @@ resources:
 - deployment.yaml
 - configmap.yaml
 - ves_cron.yaml
+- pv.yaml
