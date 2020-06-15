@@ -36,7 +36,6 @@ spec:
         - name: conf
           mountPath: /config
           readOnly: true
-        volumeMounts:
         - name: database
           mountPath: /database
           readOnly: false
