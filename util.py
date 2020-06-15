@@ -19,20 +19,12 @@ def get_logger(name, log_file='debug.log'):
 	return logger
 
 redis = None
-redisdb2 = None
 
-async def get_redis(db=None):
+async def get_redis():
 	global redis
-	global redisdb2
-	if redis and db is None:
+	if redis:
 		return redis
-	elif redisdb2 and db == 2:
-		return redisdb2
-	lr = await aioredis.create_redis_pool((os.getenv('REDIS_HOST', 'localhost'), 6379), db=db, encoding='utf-8', minsize=2, maxsize=50)
-	if db is None:
-		redis = lr
-		return redis
-	elif db == 2:
-		redisdb2 = lr
-		return redisdb2
+	lr = await aioredis.create_redis_pool((os.getenv('REDIS_HOST', 'localhost'), 6379), encoding='utf-8', minsize=2, maxsize=50)
+	redis = lr
+	return redis
 	

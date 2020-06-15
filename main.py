@@ -287,6 +287,7 @@ async def price(ctx):
         embed.description += f"Volume (24H)    : {banano['volume']:,.2f} BTC\n"
         embed.description += f"Market Cap      : ${int(banano['mcap']):,}\n"
         embed.description += "```"
+        await client.change_presence(activity=f"{int(banano['satoshi'])} sats\n")
     embed.description += "\n**NANO**"
     if nano is None:
         embed.description += '\nCurrently Unavailable\n'

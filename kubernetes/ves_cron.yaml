@@ -1,0 +1,20 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: beatrice-ves-price
+  namespace: beatrice
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: beatrice
+            image: replaceme
+            command: ["/bin/bash", "-c"]
+            args: ["python vesprice.py"]
+            env:
+              - name: REDIS_HOST
+                value: redis-0.redis
+          restartPolicy: OnFailure

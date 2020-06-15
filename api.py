@@ -100,7 +100,7 @@ async def get_nano_price():
             "mcap":mcap
         }
         if settings.VESPRICE:
-            bolivardb = await util.get_redis(db=2)
+            bolivardb = await util.get_redis()
             bolivarprice = await bolivardb.hget("prices", "dolartoday:usd-ves")
             if bolivarprice is not None:
                 ret['bolivar'] = usdprice * float(bolivarprice)
