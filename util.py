@@ -1,6 +1,7 @@
 import logging
 import aioredis
 import os
+import sys
 
 def get_logger(name, log_file='debug.log'):
 	logger = logging.getLogger(name)
