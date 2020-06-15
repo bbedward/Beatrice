@@ -57,7 +57,7 @@ async def get_banano_price():
             "change": float(response['market_data']['price_change_24h'])
         }
         if settings.VESPRICE:
-            bolivardb = await util.get_redis(db=2)
+            bolivardb = await util.get_redis()
             bolivarprice = await bolivardb.hget("prices", "dolartoday:usd-ves")
             if bolivarprice is not None:
                 ret['bolivar'] = usdprice * float(bolivarprice)
