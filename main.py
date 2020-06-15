@@ -227,7 +227,7 @@ def valid_url(url):
 
 ### Public Commands
 
-@client.command()
+@client.command(aliases=["help"])
 async def commandlist(ctx):
     message = ctx.message
     embed = discord.Embed(colour=discord.Colour.magenta())
