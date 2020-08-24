@@ -779,7 +779,11 @@ async def post_response(message, template, *args, mention_id=None, channel_id=No
     if channel_id is None:
         channel = message.channel
     else:
-        channel = message.guild.get_channel(channel_id)
+        try:
+            channel = message.guild.get_channel(channel_id)
+        except AttributeError:
+            channel = message.channel
+            logger.warn("Could not find jail channel on server. Check that the configured jail channel is correct.")
     response = template.format(*args)
     if not is_private(message.channel):
         response = "<@" + str(mention_id) + "> \n" + response
