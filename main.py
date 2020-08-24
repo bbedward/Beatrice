@@ -588,7 +588,7 @@ async def arrest(ctx):
 			jail = discord.utils.get(message.guild.roles,name=settings.ARREST_ROLE)
 			for member in message.mentions:
 				await member.add_roles(jail)
-				await post_response(message, settings.RIGHTS, mention_id=member.id)
+				await post_response(message, settings.RIGHTS, mention_id=member.id, channel_id=settings.JAIL_ID)
 			await message.add_reaction('\U0001f694')
 
 @client.command()
@@ -773,15 +773,23 @@ async def ids(ctx):
     await message.author.send(f"{resp.strip()}")
 
 ### Re-Used Discord Functions
-async def post_response(message, template, *args, mention_id=None):
+async def post_response(message, template, *args, mention_id=None, channel_id=None):
     if mention_id is None:
         mention_id = message.author.id
+    if channel_id is None:
+        channel = message.channel
+    else:
+        try:
+            channel = message.guild.get_channel(channel_id)
+        except AttributeError:
+            channel = message.channel
+            logger.warn("Could not find jail channel on server. Check that the configured jail channel is correct.")
     response = template.format(*args)
     if not is_private(message.channel):
         response = "<@" + str(mention_id) + "> \n" + response
     logger.info("sending response: '%s' for message: '%s' to userid: '%s' name: '%s'", response, message.content, message.author.id, message.author.name)
     asyncio.sleep(0.05) # Slight delay to avoid discord bot responding above commands
-    return await message.channel.send(response)
+    return await channel.send(response)
 
 async def post_usage(message, command):
     embed = discord.Embed(colour=discord.Colour.purple())
