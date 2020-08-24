@@ -34,3 +34,5 @@ data:
     UNTROLL="```You are no longer known as a TROLL in the Banano Republic, please reapply for Citizenship.```"
     VESPRICE=True
     KICK_LOG=633355505556783104
+    # Jail channel id (For sending messages to recently jailed people, who may not be able to see the channel they were just jailed in)
+    JAIL_ID=416306504124071938

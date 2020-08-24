@@ -30,3 +30,5 @@ UNTROLL="```You are no longer known as a TROLL in the Banano Republic, please re
 VESPRICE=False
 # Kick/BAN log channel (will log who kicked who)
 KICK_LOG=633355534535491605
+# Jail channel id (For sending messages to recently jailed people, who may not be able to see the channel they were just jailed in)
+JAIL_ID=416306504124071938
