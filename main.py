@@ -11,6 +11,10 @@ import db
 import util
 import paginator
 
+intents = discord.Intents.default()
+intents.members = True
+intents.presences = True
+
 logger = util.get_logger("discord")
 
 BOT_VERSION = "1.0"
@@ -126,7 +130,7 @@ COMMANDS = {
 }
 
 # Create discord client
-client = Bot(command_prefix=COMMAND_PREFIX)
+client = Bot(command_prefix=COMMAND_PREFIX, intents=intents)
 client.remove_command('help')
 
 # Don't make them wait when bot first launches
