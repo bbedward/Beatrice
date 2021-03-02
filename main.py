@@ -113,6 +113,16 @@ UNMUTE = {
         "INFO"     : "Unmute mentioned user(s)" 
 }
 
+NOIMAGES = {
+   		"CMD"      : "{0}noimages, user mention".format(COMMAND_PREFIX),
+        "INFO"     : "Stops user posting images" 
+}
+
+NOIMAGES = {
+   		"CMD"      : "{0}allowimages, user mention".format(COMMAND_PREFIX),
+        "INFO"     : "Allows user to post images" 
+}
+
 KICK = {
         "CMD"       : "{0}kick, takes: user ID(s), reason (optional)".format(COMMAND_PREFIX),
         "INFO"      : "kick 397868283870707713 303599885800964097 reason='You Suck' = kick user 303599885800964097 and user 397868283870707713"
@@ -221,7 +231,7 @@ def is_bannable(user):
     for m in client.get_all_members():
         if m.id == user.id:
             for role in m.roles:
-                if role.name.lower() not in ['banano jail', 'muzzled', '@everyone', 'citizens', 'troll', 'Private ^', 'Corporal ^^', 'Sergeant ^^^', 'Officer -', 'Second Lieutenant |', 'First Lieutenant ||', 'Captain *', 'Colonel  **', 'General ***']:
+                if role.name.lower() not in ['banano jail', 'muzzled', '@everyone', 'citizens', 'troll']:
                     return False
     return True
 
@@ -649,6 +659,26 @@ async def deport(ctx):
 				await member.remove_roles(citizenship)
 				await post_response(message, settings.DEPORT, mention_id=member.id)
 			await message.add_reaction('\U0001F6F3')
+							   
+@client.command()
+async def noimages(ctx):
+	message = ctx.message
+	if is_admin(message.author):
+		if len(message.mentions) > 0:
+			imagesperm = discord.utils.get(message.guild.roles,name=settings.IMAGES_ROLE)
+			for member in message.mentions:
+				await member.add_roles(imagesperm)
+			await message.add_reaction('\U0001FE0F')
+							   
+@client.command()
+async def allowimages(ctx):
+	message = ctx.message
+	if is_admin(message.author):
+		if len(message.mentions) > 0:
+			imagesperm = discord.utils.get(message.guild.roles,name=settings.IMAGES_ROLE)
+			for member in message.mentions:
+				await member.remove_roles(imagesperm)
+			await message.add_reaction('\U0001F3A8')
 
 @client.command()
 async def kick(ctx):
