@@ -221,7 +221,7 @@ def is_bannable(user):
     for m in client.get_all_members():
         if m.id == user.id:
             for role in m.roles:
-                if role.name.lower() not in ['banano jail', 'muzzled', '@everyone', 'citizens', 'troll', 'Private ^', 'Corporal ^^', 'Sergeant ^^^', 'Officer -', 'Second Lieutenant |', 'First Lieutenant ||', 'Captain *', 'Colonel  **', 'General ***']:
+                if role.name.lower() not in ['banano jail', 'muzzled', '@everyone', 'citizens', 'troll']:
                     return False
     return True
 
