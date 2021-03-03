@@ -19,6 +19,8 @@ data:
     playing_status=command_prefix + 'commandlist'
     # Role for mute/muzzle
     muzzled_role='muzzled'
+    # Role for image permissions
+    IMAGES_ROLE='punishment white'
     # Banano-discord
     ARREST_ROLE='BANANO JAIL'
     CITIZEN_ROLE='Citizens'
