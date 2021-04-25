@@ -509,6 +509,11 @@ async def fodl(ctx, *, username):
         return
     last_fodl[message.channel.id] = datetime.datetime.now()
     
+    #a pretty safe name check. could be better
+    if len(username) > 20 or len(username) < 5 or username.isalnum()==False:
+        await ctx.send("Definitely not a bananominer username.")
+        return
+    
     output = ""
     #TODO: verify might be ban username verify is 12 characters, no spaces or non-alphanumeric before even sending to api"s... but api's will error regardless, but might be better to not send garbage to these URL's
     
@@ -521,7 +526,9 @@ async def fodl(ctx, *, username):
 
     #Verify username is valid bananominer username, im not 100% about all the errors that are possible, but thought it was safe to print the error.
     if "error" in bMinerJSON:
-        output+="<:x:835354642308661278> bananominer error: "+bMinerJSON["error"]+"\n"+username+" not a valid Bananominer username.\nUpdate username by putting banano wallet address into <https://bananominer.com/> and copy/pasting into folding at home client \nAlso be sure that team ID is 234980 in folding at home client\n"
+        output+="<:x:835354642308661278> bananominer error: "+bMinerJSON["error"]+"\n"
+        output+=username+" not a valid Bananominer username.\nUpdate username by putting banano wallet address into <https://bananominer.com/> and copy/pasting into folding at home client \n"
+        output+= "Also be sure that team ID is 234980 in folding at home client\n"
         isCorrect = False
     else: #if no error, don't see why wouldn't be valid username...
      output+="<:white_check_mark:835347973503451176> "+username+ " is a valid bananominer username\n"
@@ -549,8 +556,7 @@ async def fodl(ctx, *, username):
         output+=str(banTeam["wus"])+" have been completed so far.\n"
         
         if   len(bMinerJSON["payments"]) == 0: 
-            output+="No payments sent yet. First payment is within 24-36 hours of completing first"
-            output+=" Work Unit as long as you complete at least 2 work units (progress bar going to 100%) across two 12 hour periods.\n"
+            output+="No payments sent yet. First payment is within 24-36 hours of completing first Work Unit as long as you complete at least 2 work units (progress bar going to 100%) across two 12 hour periods.\n"
             
         elif len(bMinerJSON["payments"]) > 0: #user has received payments
             output+="User has received " + str(len(bMinerJSON["payments"])) + " payments. Latest payment date was: " 
@@ -565,7 +571,6 @@ async def fodl(ctx, *, username):
     output = output+"\n"
     if "id" in fahAPIJSON: output+="<https://stats.foldingathome.org/donor/"+str(fahAPIJSON["id"])+">\n"
     output+="<https://bananominer.com/user_name/"+username+">\n"
-    #https://folding.extremeoverclocking.com/search.php if i knew how to directly reference a user's page on this site, i would... helpful for visualizing when WU's were completed.
     embed = discord.Embed(colour=discord.Colour.teal())
     embed.title = "FODL Check"
     embed.description = output #"Checking your F@H Stats for Bananominer compatibility"
