@@ -139,4 +139,24 @@ async def get_all_prices():
             if result is not None:
                 ret.append(task.result())
     return ret
+        
+async def getFODLJSON(username):
+    fahAPI = "https://api.foldingathome.org/user/"+username
+    bMinerAPI = "https://bananominer.com/user_name/"+username
+    
+    tasks = [
+        json_get(fahAPI),
+        json_get(bMinerAPI)
+    ]
+    ret = [{},{}]
+    while len(tasks):
+        done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+        for task in done:
+            result = task.result()
+            if result is not None:
+                if "users" in task.result(): #simplest way to tell the json apart by results that I see...
+                    ret[0] = task.result()
+                else:
+                    ret[1] = task.result()
+    return ret
 
