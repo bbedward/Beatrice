@@ -497,7 +497,6 @@ async def fodl(ctx, *, username):
     message = ctx.message
     #hard-coding mining channel in here for now. no one else should need this command...
     if message.channel.id != 566268199210057728: #or is_private(message.channel):
-        print(message.channel)
         return
 
     global last_fodl
