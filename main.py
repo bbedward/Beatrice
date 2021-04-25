@@ -528,7 +528,6 @@ async def fodl(ctx, *, username):
     if "error" in bMinerJSON:
         output+="<:x:835354642308661278> bananominer error: "+bMinerJSON["error"]+"\n"
         output+=username+" not a valid Bananominer username.\nUpdate username by putting banano wallet address into <https://bananominer.com/> and copy/pasting into folding at home client \n"
-        output+= "Also be sure that team ID is 234980 in folding at home client\n"
         isCorrect = False
     else: #if no error, don't see why wouldn't be valid username...
      output+="<:white_check_mark:835347973503451176> "+username+ " is a valid bananominer username\n"
@@ -548,7 +547,7 @@ async def fodl(ctx, *, username):
             else:
                 nonBanWU += team["wus"]    
         if  banTeam == {}:
-            output+="<:x:835354642308661278> User: \""+ username + "\" has not folded for banano team\n" 
+            output+="<:x:835354642308661278> User: \""+ username + "\" has not folded for banano team ID 234980\n" 
             isCorrect = False
     if (isCorrect):
         output+="<:white_check_mark:835347973503451176> Username \"" + username 
