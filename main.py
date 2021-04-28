@@ -67,10 +67,10 @@ MEOW = {
 MEOWLIST = {
 		"CMD"      : "{0}meowlist".format(COMMAND_PREFIX),
         "INFO"     : "Receive private message with a list of all meows stored with the bot"
-}
+} 
 FODL = {
 		"CMD"      : "{0}fodl".format(COMMAND_PREFIX),
-        "INFO"     : "Verifies Folding@Home Bananominer Client configuration after completing 1 Work Unit"
+        "INFO"     : "Verifies Folding@Home Bananominer Client configuration after completing 1 Work Unit in banano-mining channel"
 }
 ### Admin commands
 ADDPUP = {
@@ -138,7 +138,7 @@ BAN = {
 
 ### Dictionary of different command categories
 COMMANDS = {
-		"USER_COMMANDS"          : [PRICE, MEME, MEMELIST, PUP, PUPLIST, MEOW, MEOWLIST],
+		"USER_COMMANDS"          : [PRICE, MEME, MEMELIST, PUP, PUPLIST, MEOW, MEOWLIST, FODL],
         "ADMIN_COMMANDS"         : [ADDPUP, ADDMEME, ADDMEOW, REMOVEPUP, REMOVEMEME, REMOVEMEOW, MUTE, UNMUTE, KICK, BAN],
 }
 
@@ -505,7 +505,7 @@ async def fodl(ctx, *, username):
     tdelta = datetime.datetime.now() - last_fodl[message.channel.id]
     if 10 > tdelta.seconds: #i think the global spam limits would be too high. 
         #I'm guessing this would function better if it additionally checked per user
-        await post_response(message, "No more fodls for {0} seconds", (10 - tdelta.seconds))
+        await message.author.send("No more fodl for {0} seconds".format(10 - tdelta.seconds))
         return
     last_fodl[message.channel.id] = datetime.datetime.now()
     
@@ -515,14 +515,15 @@ async def fodl(ctx, *, username):
         return
     
     output = ""
-    #TODO: verify might be ban username verify is 12 characters, no spaces or non-alphanumeric before even sending to api"s... but api's will error regardless, but might be better to not send garbage to these URL's
-    
-    #This variable is mostly just for a potential you messed up statement at end, but in-line callouts usually sort it out...
     isCorrect = True
     username.lower()
     getDataBase = await api.getFODLJSON(username)
     fahAPIJSON = getDataBase[0]
     bMinerJSON = getDataBase[1]
+
+    if(bMinerJSON == {} or fahAPIJSON=={}):
+        await ctx.send("API Error")
+        return
 
     #Verify username is valid bananominer username, im not 100% about all the errors that are possible, but thought it was safe to print the error.
     if "error" in bMinerJSON:
@@ -534,7 +535,6 @@ async def fodl(ctx, *, username):
 
     banTeam = {}
     nonBanWU = 0
-    #lastnonBanWU will add this when/if i include some date functionality
     #Verify folding for correct team and last time folded for correct team
     if "name" not in fahAPIJSON:
         output+="<:x:835354642308661278> User \"" + username + "\" has not completed a Work Unit\n"
@@ -562,7 +562,7 @@ async def fodl(ctx, *, username):
             output+= bMinerJSON["payments"][0]["created_at"] + " UTC\n"
     #adding to the output some summary that its broken... might not be necessary since I specifically call them out inline, might be a good spot for a fail meme.....
     else:
-      output+="Please review above errors. After updating client and completing another Work Unit, this test can be ran again to verify your client is set up to track points correctly.\n"
+      output+="\nPlease review above errors. After updating client and completing another Work Unit, this test can be ran again to verify your client is set up to track points correctly.\n"
     
     #This is not explicitly an issue, but calling it out in summary may hep in identifying wrong team issues, calling out the date(s) might also be helpful?
     if nonBanWU > 0:
