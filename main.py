@@ -67,8 +67,11 @@ MEOW = {
 MEOWLIST = {
 		"CMD"      : "{0}meowlist".format(COMMAND_PREFIX),
         "INFO"     : "Receive private message with a list of all meows stored with the bot"
+} 
+FODL = {
+		"CMD"      : "{0}fodl".format(COMMAND_PREFIX),
+        "INFO"     : "Verifies Folding@Home Bananominer Client configuration after completing 1 Work Unit in banano-mining channel"
 }
-
 ### Admin commands
 ADDPUP = {
 		"CMD"      : "{0}addpup, takes: url, author, title".format(COMMAND_PREFIX),
@@ -135,7 +138,7 @@ BAN = {
 
 ### Dictionary of different command categories
 COMMANDS = {
-		"USER_COMMANDS"          : [PRICE, MEME, MEMELIST, PUP, PUPLIST, MEOW, MEOWLIST],
+		"USER_COMMANDS"          : [PRICE, MEME, MEMELIST, PUP, PUPLIST, MEOW, MEOWLIST, FODL],
         "ADMIN_COMMANDS"         : [ADDPUP, ADDMEME, ADDMEOW, REMOVEPUP, REMOVEMEME, REMOVEMEOW, MUTE, UNMUTE, KICK, BAN],
 }
 
@@ -149,6 +152,7 @@ last_price = {}
 last_meme = {}
 last_pup = {}
 last_meow = {}
+last_fodl = {}
 def create_spam_dicts():
     """map every channel the client can see to datetime objects
         this way we can have channel-specific spam prevention"""
@@ -156,12 +160,14 @@ def create_spam_dicts():
     global last_meme
     global last_pup
     global last_meow
+    global last_fodl
     for c in client.get_all_channels():
         if not is_private(c):
             last_price[c.id] = initial_ts
             last_meme[c.id] = initial_ts
             last_pup[c.id] = initial_ts
             last_meow[c.id] = initial_ts
+            last_fodl[c.id] = initial_ts
 
 @client.event
 async def on_ready():
@@ -485,6 +491,90 @@ async def puplist(ctx):
         for e in entries:
             embed.add_field(name=e.name,value=e.value,inline=False)
     await message.author.send(embed=embed)
+
+@client.command()
+async def fodl(ctx, *, username):
+    message = ctx.message
+    #hard-coding mining channel in here for now. no one else should need this command...
+    if message.channel.id != 566268199210057728: #or is_private(message.channel):
+        return
+
+    global last_fodl
+    if message.channel.id not in last_fodl:
+        last_fodl[message.channel.id] = datetime.datetime.now()
+    tdelta = datetime.datetime.now() - last_fodl[message.channel.id]
+    if 10 > tdelta.seconds: #i think the global spam limits would be too high. 
+        #I'm guessing this would function better if it additionally checked per user
+        await message.author.send("No more fodl for {0} seconds".format(10 - tdelta.seconds))
+        return
+    last_fodl[message.channel.id] = datetime.datetime.now()
+    
+    #a pretty safe name check. could be better
+    if len(username) > 20 or len(username) < 5 or username.isalnum()==False:
+        await ctx.send("Definitely not a bananominer username.")
+        return
+    
+    output = ""
+    isCorrect = True
+    username.lower()
+    getDataBase = await api.getFODLJSON(username)
+    fahAPIJSON = getDataBase[0]
+    bMinerJSON = getDataBase[1]
+
+    if(bMinerJSON == {} or fahAPIJSON=={}):
+        await ctx.send("API Error")
+        return
+
+    #Verify username is valid bananominer username, im not 100% about all the errors that are possible, but thought it was safe to print the error.
+    if "error" in bMinerJSON:
+        output+="<:x:835354642308661278> bananominer error: "+bMinerJSON["error"]+"\n"
+        output+=username+" not a valid Bananominer username.\nUpdate username by putting banano wallet address into <https://bananominer.com/> and copy/pasting into folding at home client \n"
+        isCorrect = False
+    else: #if no error, don't see why wouldn't be valid username...
+     output+="<:white_check_mark:835347973503451176> "+username+ " is a valid bananominer username\n"
+
+    banTeam = {}
+    nonBanWU = 0
+    #Verify folding for correct team and last time folded for correct team
+    if "name" not in fahAPIJSON:
+        output+="<:x:835354642308661278> User \"" + username + "\" has not completed a Work Unit\n"
+        isCorrect = False
+
+    elif "teams" in fahAPIJSON: #apparently i have to be explicit about this based on error i found...
+        for team in fahAPIJSON["teams"]:
+            if team["team"] == 234980:
+                banTeam = team
+            else:
+                nonBanWU += team["wus"]    
+        if  banTeam == {}:
+            output+="<:x:835354642308661278> User: \""+ username + "\" has not folded for banano team ID 234980\n" 
+            isCorrect = False
+    if (isCorrect):
+        output+="<:white_check_mark:835347973503451176> Username \"" + username 
+        output+= "\" most recent completed Work Unit for BANANO Team was " + str(banTeam["last"])+" UTC and " 
+        output+=str(banTeam["wus"])+" have been completed so far.\n"
+        
+        if   len(bMinerJSON["payments"]) == 0: 
+            output+="No payments sent yet. First payment is within 24-36 hours of completing first Work Unit as long as you complete at least 2 work units (progress bar going to 100%) across two 12 hour periods.\n"
+            
+        elif len(bMinerJSON["payments"]) > 0: #user has received payments
+            output+="User has received " + str(len(bMinerJSON["payments"])) + " payments. Latest payment date was: " 
+            output+= bMinerJSON["payments"][0]["created_at"] + " UTC\n"
+    #adding to the output some summary that its broken... might not be necessary since I specifically call them out inline, might be a good spot for a fail meme.....
+    else:
+      output+="\nPlease review above errors. After updating client and completing another Work Unit, this test can be ran again to verify your client is set up to track points correctly.\n"
+    
+    #This is not explicitly an issue, but calling it out in summary may hep in identifying wrong team issues, calling out the date(s) might also be helpful?
+    if nonBanWU > 0:
+        output+="<:grey_exclamation:835357988432642049> "+username + " has completed "+ str(nonBanWU) + " number of Work Units for teams other than Banano\n"
+    output = output+"\n"
+    if "id" in fahAPIJSON: output+="<https://stats.foldingathome.org/donor/"+str(fahAPIJSON["id"])+">\n"
+    output+="<https://bananominer.com/user_name/"+username+">\n"
+    embed = discord.Embed(colour=discord.Colour.teal())
+    embed.title = "FODL Check"
+    embed.description = output #"Checking your F@H Stats for Bananominer compatibility"
+    #embed.addFields
+    await ctx.send( embed=embed)
 
 ### Admin Commands
 
