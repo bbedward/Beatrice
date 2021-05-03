@@ -512,26 +512,27 @@ async def fodl(ctx, *, username):
     #a pretty safe name check. could be better
     if len(username) > 20 or len(username) < 5 or username.isalnum()==False:
         await ctx.send("Definitely not a bananominer username.")
+        await message.add_reaction('\U00002753')
         return
-    
+    await message.add_reaction('\U0001F4C1') #add folder emoji to message
     output = ""
     isCorrect = True
-    username.lower()
+    username = username.lower()
     getDataBase = await api.getFODLJSON(username)
     fahAPIJSON = getDataBase[0]
     bMinerJSON = getDataBase[1]
-
-    if(bMinerJSON == {} or fahAPIJSON=={}):
+    fahBonusJSON = getDataBase[2]
+    banUnits = 0
+    if(bMinerJSON == {} or fahAPIJSON=={} ):
         await ctx.send("API Error")
         return
 
     #Verify username is valid bananominer username, im not 100% about all the errors that are possible, but thought it was safe to print the error.
     if "error" in bMinerJSON:
-        output+="<:x:835354642308661278> bananominer error: "+bMinerJSON["error"]+"\n"
-        output+=username+" not a valid Bananominer username.\nUpdate username by putting banano wallet address into <https://bananominer.com/> and copy/pasting into folding at home client \n"
+        output+="<:x:835354642308661278> " +username+" not a valid Bananominer username.\nUpdate username by putting banano wallet address into <https://bananominer.com/> and copy/pasting into folding at home client \n"
         isCorrect = False
     else: #if no error, don't see why wouldn't be valid username...
-     output+="<:white_check_mark:835347973503451176> "+username+ " is a valid bananominer username\n"
+        output+="<:white_check_mark:835347973503451176> "+username+ " is a valid bananominer username\n"
 
     banTeam = {}
     nonBanWU = 0
@@ -540,7 +541,7 @@ async def fodl(ctx, *, username):
         output+="<:x:835354642308661278> User \"" + username + "\" has not completed a Work Unit\n"
         isCorrect = False
 
-    elif "teams" in fahAPIJSON: #apparently i have to be explicit about this based on error i found...
+    elif "teams" in fahAPIJSON: 
         for team in fahAPIJSON["teams"]:
             if team["team"] == 234980:
                 banTeam = team
@@ -550,30 +551,39 @@ async def fodl(ctx, *, username):
             output+="<:x:835354642308661278> User: \""+ username + "\" has not folded for banano team ID 234980\n" 
             isCorrect = False
     if (isCorrect):
-        output+="<:white_check_mark:835347973503451176> Username \"" + username 
-        output+= "\" most recent completed Work Unit for BANANO Team was " + str(banTeam["last"])+" UTC and " 
-        output+=str(banTeam["wus"])+" have been completed so far.\n"
+        if "last" in banTeam: #might need to investigate further but sometimes fah api doesn't have data...
+            output+="<:white_check_mark:835347973503451176> " + str(banTeam["last"])+" UTC : Last Completed Banano WU\n" 
+        output+="<:white_check_mark:835347973503451176> "+str(banTeam["wus"])+" work units completed so far.\n"
         
         if   len(bMinerJSON["payments"]) == 0: 
-            output+="No payments sent yet. First payment is within 24-36 hours of completing first Work Unit as long as you complete at least 2 work units (progress bar going to 100%) across two 12 hour periods.\n"
-            
+            output+="<:grey_exclamation:835357988432642049> No payments sent yet. First payment is within 24-36 hours of completing first Work Unit as long as you complete at least 2 work units (progress bar going to 100%) with at least one in each 12 hour period.\n"
+            output+="<:banana:838483242113957898>Work Units Pending Payment: "+str(banTeam["wus"])+"\n"
         elif len(bMinerJSON["payments"]) > 0: #user has received payments
-            output+="User has received " + str(len(bMinerJSON["payments"])) + " payments. Latest payment date was: " 
-            output+= bMinerJSON["payments"][0]["created_at"] + " UTC\n"
-    #adding to the output some summary that its broken... might not be necessary since I specifically call them out inline, might be a good spot for a fail meme.....
-    else:
-      output+="\nPlease review above errors. After updating client and completing another Work Unit, this test can be ran again to verify your client is set up to track points correctly.\n"
-    
+            output+="<:white_check_mark:835347973503451176> " + bMinerJSON["payments"][0]["created_at"] + " UTC was latest payment for user.\n"
+            output+="<:banana:838483242113957898>Work Units Pending Payment: "+str(banTeam["wus"]-bMinerJSON["payments"][0]["work_units"])+"\n"
+
+        bonus = False
+        for cpu in fahBonusJSON:
+            if cpu["active"]==1:
+                bonus = True
+                output += "<:white_check_mark:835347973503451176> Passkey Bonus Active\n"
+                break
+        if bonus ==False and len(fahBonusJSON)>0: 
+            output += "<:grey_exclamation:835357988432642049>  Passkey Bonus     Not Active [Passkey Bonus Info](https://test.foldingathome.org/support/faq/points/?lng=en-US#what-are-the-qualifications-for-the-qrb)\n"
+            #add bonus faq
     #This is not explicitly an issue, but calling it out in summary may hep in identifying wrong team issues, calling out the date(s) might also be helpful?
     if nonBanWU > 0:
         output+="<:grey_exclamation:835357988432642049> "+username + " has completed "+ str(nonBanWU) + " number of Work Units for teams other than Banano\n"
+    if (isCorrect==False):
+      output+="\nPlease review above errors. After updating client and completing another Work Unit: this test can be ran again to verify your client is set up to track points correctly.\n"
+    
     output = output+"\n"
-    if "id" in fahAPIJSON: output+="<https://stats.foldingathome.org/donor/"+str(fahAPIJSON["id"])+">\n"
-    output+="<https://bananominer.com/user_name/"+username+">\n"
+    if "id" in fahAPIJSON: output+="[F@H Donor Stat Page](https://stats.foldingathome.org/donor/"+str(fahAPIJSON["id"])+") "
+    output+="[Bananominer JSON](https://bananominer.com/user_name/"+username+")\n"
+    output+="FODL Check might be cached and may not update immediately.\n"
     embed = discord.Embed(colour=discord.Colour.teal())
     embed.title = "FODL Check"
-    embed.description = output #"Checking your F@H Stats for Bananominer compatibility"
-    #embed.addFields
+    embed.description = output
     await ctx.send( embed=embed)
 
 ### Admin Commands

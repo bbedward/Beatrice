@@ -143,20 +143,24 @@ async def get_all_prices():
 async def getFODLJSON(username):
     fahAPI = "https://api.foldingathome.org/user/"+username
     bMinerAPI = "https://bananominer.com/user_name/"+username
+    fahBonusAPI = "https://api.foldingathome.org/bonus?user="+username
     
     tasks = [
         json_get(fahAPI),
-        json_get(bMinerAPI)
+        json_get(bMinerAPI),
+        json_get(fahBonusAPI)
     ]
-    ret = [{},{}]
+    ret = [{},{},[]]
     while len(tasks):
         done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         for task in done:
             result = task.result()
             if result is not None:
-                if "users" in task.result(): #simplest way to tell the json apart by results that I see...
-                    ret[0] = task.result()
+                if "users" in result: #simplest way to tell the json apart by results that I see...
+                    ret[0] = result
+                elif  "user" in result or "error" in result: #and "expired" in task.result()[0]
+                    ret[1] = result
                 else:
-                    ret[1] = task.result()
+                    ret[2] = result
     return ret
 
