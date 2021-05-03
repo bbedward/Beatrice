@@ -496,7 +496,7 @@ async def puplist(ctx):
 async def fodl(ctx, *, username):
     message = ctx.message
     #hard-coding mining channel in here for now. no one else should need this command...
-    if message.channel.id != 788938568974204968: #or is_private(message.channel):
+    if message.channel.id != 566268199210057728: #or is_private(message.channel):
         return
 
     global last_fodl
