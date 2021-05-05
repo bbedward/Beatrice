@@ -502,7 +502,7 @@ async def fodl(ctx, *, username):
 
     global last_fodl
     if message.channel.id not in last_fodl:
-        last_fodl[message.channel.id] = datetime.datetime.now() -7
+        last_fodl[message.channel.id] = datetime.datetime.now()
     tdelta = datetime.datetime.now() - last_fodl[message.channel.id]
     if 5 > tdelta.seconds: #i think the global spam limits would be too high. 
         await message.author.send("No more fodl for {0} seconds".format(5 - tdelta.seconds))
