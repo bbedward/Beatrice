@@ -496,22 +496,22 @@ async def puplist(ctx):
 async def fodl(ctx, *, username):
     message = ctx.message
     #hard-coding mining channel in here for now. no one else should need this command...
-    if message.channel.id != 566268199210057728: #or is_private(message.channel):
+    #could allow this in private message, but don't want to pollute the global with everyones chat id's
+    if message.channel.id != 566268199210057728:  # and not is_private(message.channel):
         return
 
     global last_fodl
     if message.channel.id not in last_fodl:
-        last_fodl[message.channel.id] = datetime.datetime.now()
+        last_fodl[message.channel.id] = datetime.datetime.now() -7
     tdelta = datetime.datetime.now() - last_fodl[message.channel.id]
-    if 10 > tdelta.seconds: #i think the global spam limits would be too high. 
-        #I'm guessing this would function better if it additionally checked per user
-        await message.author.send("No more fodl for {0} seconds".format(10 - tdelta.seconds))
+    if 5 > tdelta.seconds: #i think the global spam limits would be too high. 
+        await message.author.send("No more fodl for {0} seconds".format(5 - tdelta.seconds))
         return
     last_fodl[message.channel.id] = datetime.datetime.now()
     
     #a pretty safe name check. could be better
     if len(username) > 20 or len(username) < 5 or username.isalnum()==False:
-        await ctx.send("Definitely not a bananominer username.")
+        await message.author.send("Definitely not a bananominer username.")
         await message.add_reaction('\U00002753')
         return
     await message.add_reaction('\U0001F4C1') #add folder emoji to message
@@ -531,51 +531,58 @@ async def fodl(ctx, *, username):
     if "error" in bMinerJSON:
         output+="<:x:835354642308661278> " +username+" not a valid Bananominer username.\nUpdate username by putting banano wallet address into <https://bananominer.com/> and copy/pasting into folding at home client \n"
         isCorrect = False
+        await message.add_reaction('\U0001F58D')
     else: #if no error, don't see why wouldn't be valid username...
         output+="<:white_check_mark:835347973503451176> "+username+ " is a valid bananominer username\n"
 
     banTeam = {}
     nonBanWU = 0
     #Verify folding for correct team and last time folded for correct team
-    if "name" not in fahAPIJSON:
+    if "name" not in fahAPIJSON or "teams" not in fahAPIJSON:
         output+="<:x:835354642308661278> User \"" + username + "\" has not completed a Work Unit\n"
         isCorrect = False
+        await message.add_reaction('\U000026D4')
 
     elif "teams" in fahAPIJSON: 
         for team in fahAPIJSON["teams"]:
-            if team["team"] == 234980:
+            if team["team"] == 234980 and "wus" in team:
                 banTeam = team
-            else:
+            elif "wus" in team:
                 nonBanWU += team["wus"]    
         if  banTeam == {}:
             output+="<:x:835354642308661278> User: \""+ username + "\" has not folded for banano team ID 234980\n" 
             isCorrect = False
+            await message.add_reaction('\U000026D4')
+
     if (isCorrect):
         if "last" in banTeam: #might need to investigate further but sometimes fah api doesn't have data...
             output+="<:white_check_mark:835347973503451176> " + str(banTeam["last"])+" UTC : Last Completed Banano WU\n" 
         output+="<:white_check_mark:835347973503451176> "+str(banTeam["wus"])+" work units completed so far.\n"
-        
+        await message.add_reaction('\U0001F6F0')
         if   len(bMinerJSON["payments"]) == 0: 
             output+="<:grey_exclamation:835357988432642049> No payments sent yet. First payment is within 24-36 hours of completing first Work Unit as long as you complete at least 2 work units (progress bar going to 100%) with at least one in each 12 hour period.\n"
             output+="<:banana:838483242113957898>Work Units Pending Payment: "+str(banTeam["wus"])+"\n"
+            await message.add_reaction('\U0001F6F0')
         elif len(bMinerJSON["payments"]) > 0: #user has received payments
             output+="<:white_check_mark:835347973503451176> " + bMinerJSON["payments"][0]["created_at"] + " UTC was latest payment for user.\n"
             output+="<:banana:838483242113957898>Work Units Pending Payment: "+str(banTeam["wus"]-bMinerJSON["payments"][0]["work_units"])+"\n"
-
+            await message.add_reaction('\U0001F34C')
+        await message.add_reaction('\U00002705')
         bonus = False
         for cpu in fahBonusJSON:
             if cpu["active"]==1:
                 bonus = True
                 output += "<:white_check_mark:835347973503451176> Passkey Bonus Active\n"
+
                 break
         if bonus ==False and len(fahBonusJSON)>0: 
-            output += "<:grey_exclamation:835357988432642049>  Passkey Bonus     Not Active [Passkey Bonus Info](https://test.foldingathome.org/support/faq/points/?lng=en-US#what-are-the-qualifications-for-the-qrb)\n"
+            output += "<:grey_exclamation:835357988432642049>  Passkey Bonus     Not Active [Passkey Bonus Info](https://foldingathome.org/support/faq/points/?lng=en-US#what-are-the-qualifications-for-the-qrb)\nPasskey Requires 10 work units completed after adding to client to activate."
             #add bonus faq
     #This is not explicitly an issue, but calling it out in summary may hep in identifying wrong team issues, calling out the date(s) might also be helpful?
     if nonBanWU > 0:
         output+="<:grey_exclamation:835357988432642049> "+username + " has completed "+ str(nonBanWU) + " number of Work Units for teams other than Banano\n"
     if (isCorrect==False):
-      output+="\nPlease review above errors. After updating client and completing another Work Unit: this test can be ran again to verify your client is set up to track points correctly.\n"
+        output+="\nPlease review above errors. After updating client and completing another Work Unit: this test can be ran again to verify your client is set up to track points correctly.\n"
     
     output = output+"\n"
     if "id" in fahAPIJSON: output+="[F@H Donor Stat Page](https://stats.foldingathome.org/donor/"+str(fahAPIJSON["id"])+") "
@@ -584,7 +591,7 @@ async def fodl(ctx, *, username):
     embed = discord.Embed(colour=discord.Colour.teal())
     embed.title = "FODL Check"
     embed.description = output
-    await ctx.send( embed=embed)
+    await message.author.send( embed=embed)
 
 ### Admin Commands
 
