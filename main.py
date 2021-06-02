@@ -15,6 +15,8 @@ intents = discord.Intents.default()
 intents.members = True
 intents.presences = True
 
+SUPERS=[303599885800964097]
+
 logger = util.get_logger("discord")
 
 BOT_VERSION = "1.0"
@@ -269,7 +271,7 @@ async def price(ctx):
     if message.channel.id not in last_price:
         last_price[message.channel.id] = datetime.datetime.now()
     tdelta = datetime.datetime.now() - last_price[message.channel.id]
-    if message.author.id != 303599885800964097:
+    if message.author.id not in SUPERS:
         if SPAM_THRESHOLD > tdelta.seconds:
             await message.author.send("No more price for {0} seconds".format(SPAM_THRESHOLD - tdelta.seconds))
             return
@@ -339,9 +341,10 @@ async def meme(ctx):
     if message.channel.id not in last_meme:
         last_meme[message.channel.id] = datetime.datetime.now()
     tdelta = datetime.datetime.now() - last_meme[message.channel.id]
-    if SPAM_THRESHOLD > tdelta.seconds:
-        await post_response(message, "No more memes for {0} seconds", (SPAM_THRESHOLD - tdelta.seconds))
-        return
+    if message.author.id not in SUPERS:
+        if SPAM_THRESHOLD > tdelta.seconds:
+            await post_response(message, "No more memes for {0} seconds", (SPAM_THRESHOLD - tdelta.seconds))
+            return
     last_meme[message.channel.id] = datetime.datetime.now()
     meme = db.get_next_meme()
     if meme is None:
@@ -394,9 +397,10 @@ async def meow(ctx):
     if message.channel.id not in last_meow:
         last_meow[message.channel.id] = datetime.datetime.now()
     tdelta = datetime.datetime.now() - last_meow[message.channel.id]
-    if SPAM_THRESHOLD > tdelta.seconds:
-        await post_response(message, "No more meows for {0} seconds", (SPAM_THRESHOLD - tdelta.seconds))
-        return
+    if message.author.id not in SUPERS:
+        if SPAM_THRESHOLD > tdelta.seconds:
+            await post_response(message, "No more meows for {0} seconds", (SPAM_THRESHOLD - tdelta.seconds))
+            return
     last_meow[message.channel.id] = datetime.datetime.now()
     meow = db.get_next_meow()
     if meow is None:
@@ -449,9 +453,10 @@ async def pup(ctx):
     if message.channel.id not in last_pup:
         last_pup[message.channel.id] = datetime.datetime.now()
     tdelta = datetime.datetime.now() - last_pup[message.channel.id]
-    if SPAM_THRESHOLD > tdelta.seconds:
-        await post_response(message, "No more pups for {0} seconds", (SPAM_THRESHOLD - tdelta.seconds))
-        return
+    if message.author.id not in SUPERS:
+        if SPAM_THRESHOLD > tdelta.seconds:
+            await post_response(message, "No more pups for {0} seconds", (SPAM_THRESHOLD - tdelta.seconds))
+            return
     last_pup[message.channel.id] = datetime.datetime.now()
     pup = db.get_next_pup()
     if pup is None:
@@ -504,9 +509,10 @@ async def fodl(ctx, *, username):
     if message.channel.id not in last_fodl:
         last_fodl[message.channel.id] = datetime.datetime.now()
     tdelta = datetime.datetime.now() - last_fodl[message.channel.id]
-    if 5 > tdelta.seconds: #i think the global spam limits would be too high. 
-        await message.author.send("No more fodl for {0} seconds".format(5 - tdelta.seconds))
-        return
+    if message.author.id not in SUPERS:
+        if 5 > tdelta.seconds: #i think the global spam limits would be too high. 
+            await message.author.send("No more fodl for {0} seconds".format(5 - tdelta.seconds))
+            return
     last_fodl[message.channel.id] = datetime.datetime.now()
     
     #a pretty safe name check. could be better
