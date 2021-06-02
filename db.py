@@ -14,6 +14,9 @@ def pup_exists(url):
 def meow_exists(url):
     return Meow.select().where(Meow.url == url).count() > 0
 
+def fridge_exists(url):
+    return Fridge.select().where(Fridge.url == url).count() > 0
+
 def get_meme_sequence():
     try:
         memeSeq = Sequence.select().where(Sequence.name == 'meme').get()
@@ -55,6 +58,21 @@ def get_meow_sequence():
         meowSeq = Sequence(name='meow')
         meowSeq.save()
         return 1
+
+def get_fridge_sequence():
+    try:
+        fridgeSeq = Sequence.select().where(Sequence.name == 'fridge').get()
+        fridgeCount = Fridge.select().count()
+        curSeq = fridgeSeq.index + 1
+        if curSeq > fridgeCount:
+            curSeq = 1
+        Sequence.update(index=curSeq).where(Sequence.name == 'fridge').execute()
+        return curSeq
+    except Sequence.DoesNotExist:
+        fridgeSeq = Sequence(name='fridge')
+        fridgeSeq.save()
+        return 1
+
 def format_result(id, url, author, title):
     return {"id":id, "url":url, "author":author, "title":title}
 
@@ -79,6 +97,13 @@ def get_meows():
         return_data.append(format_result(m.id, m.url, m.author, m.title))
     return return_data
 
+def get_fridges():
+    fridges = Fridge.select().order_by(Fridge.created_at.desc())
+    return_data = []
+    for m in fridges:
+        return_data.append(format_result(m.id, m.url, m.author, m.title))
+    return return_data
+
 def get_next_meme():
     memes = get_memes()
     if len(memes) == 0:
@@ -97,6 +122,12 @@ def get_next_meow():
         return None
     return meows[get_meow_sequence() - 1]
 
+def get_next_fridge():
+    fridges = get_fridges()
+    if len(fridges) == 0:
+        return None
+    return fridges[get_fridge_sequence() - 1]
+
 def add_meme(url, author, title):
     if meme_exists(url):
         return False
@@ -113,6 +144,12 @@ def add_meow(url, author, title):
     if meow_exists(url):
         return False
     m = Meow(url=url, author=author, title=title)
+    return m.save() > 0
+
+def add_fridge(url, author, title):
+    if fridge_exists(url):
+        return False
+    m = Fridge(url=url, author=author, title=title)
     return m.save() > 0
 
 def remove_meme(id):
@@ -137,6 +174,14 @@ def remove_meow(id):
         m.delete_instance()
         return True
     except Meow.DoesNotExist:
+        return False
+
+def remove_fridge(id):
+    try:
+        m = Fridge.select().where((Fridge.id == id) | (Fridge.url == id)).get()
+        m.delete_instance()
+        return True
+    except Fridge.DoesNotExist:
         return False
 
 # Mute
@@ -197,6 +242,16 @@ class Meow(BaseModel):
     class Meta:
         db_table = 'meow_list'
 
+class Fridge(BaseModel):
+    """Represents a fridge in the database"""
+    url = CharField()
+    author = CharField()
+    title = CharField()
+    created_at = DateTimeField(default=datetime.datetime.now())
+
+    class Meta:
+        db_table = 'fridge_list'
+
 class Sequence(BaseModel):
     """Represents current meme/pup sequence"""
     name = CharField()
@@ -214,6 +269,6 @@ class SilenceList(BaseModel):
 ### Initialization
 def create_db():
     db.connect()
-    db.create_tables([Meme, Pup, Sequence, Meow, SilenceList], safe=True)
+    db.create_tables([Meme, Pup, Sequence, Meow, SilenceList, Fridge], safe=True)
 
 create_db()

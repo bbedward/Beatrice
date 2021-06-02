@@ -70,6 +70,17 @@ MEOWLIST = {
 		"CMD"      : "{0}meowlist".format(COMMAND_PREFIX),
         "INFO"     : "Receive private message with a list of all meows stored with the bot"
 } 
+
+FRIDGE = {
+		"CMD"      : "{0}fridge".format(COMMAND_PREFIX),
+        "INFO"     : "Display next fridge in sequence"
+}
+
+FRIDGELIST = {
+		"CMD"      : "{0}fridgelist".format(COMMAND_PREFIX),
+        "INFO"     : "Receive private message with a list of all fridges stored with the bot"
+} 
+
 FODL = {
 		"CMD"      : "{0}fodl".format(COMMAND_PREFIX),
         "INFO"     : "Verifies Folding@Home Bananominer Client configuration after completing 1 Work Unit in banano-mining channel"
@@ -93,6 +104,13 @@ ADDMEOW = {
         "USAGE"    : "{0}addmeow <url> <author> <title>".format(COMMAND_PREFIX)
 }
 
+ADDFRIDGE = {
+   		"CMD"      : "{0}addfridge, takes: url, author, title".format(COMMAND_PREFIX),
+        "INFO"     : "Add URL to the bot's fridge list",
+        "USAGE"    : "{0}addfridge <url> <author> <title>".format(COMMAND_PREFIX)
+}
+
+
 REMOVEPUP = {
    		"CMD"      : "{0}removepup, takes: url or id".format(COMMAND_PREFIX),
         "INFO"     : "Remove pup matching URL or ID from the bot's pup list" 
@@ -106,6 +124,11 @@ REMOVEMEME = {
 REMOVEMEOW = {
    		"CMD"      : "{0}removemeow, takes: url or id".format(COMMAND_PREFIX),
         "INFO"     : "Remove meow matching URL or ID from the bot's meow list" 
+}
+
+REMOVEFRIDGE = {
+   		"CMD"      : "{0}removefridge, takes: url or id".format(COMMAND_PREFIX),
+        "INFO"     : "Remove fridge matching URL or ID from the bot's fridge list" 
 }
 
 MUTE = {
@@ -140,8 +163,8 @@ BAN = {
 
 ### Dictionary of different command categories
 COMMANDS = {
-		"USER_COMMANDS"          : [PRICE, MEME, MEMELIST, PUP, PUPLIST, MEOW, MEOWLIST, FODL],
-        "ADMIN_COMMANDS"         : [ADDPUP, ADDMEME, ADDMEOW, REMOVEPUP, REMOVEMEME, REMOVEMEOW, MUTE, UNMUTE, KICK, BAN],
+		"USER_COMMANDS"          : [PRICE, MEME, MEMELIST, PUP, PUPLIST, MEOW, MEOWLIST, FRIDGE, FRIDGELIST, FODL],
+        "ADMIN_COMMANDS"         : [ADDPUP, ADDMEME, ADDMEOW, ADDFRIDGE, REMOVEPUP, REMOVEMEME, REMOVEMEOW, REMOVEFRIDGE, MUTE, UNMUTE, KICK, BAN],
 }
 
 # Create discord client
@@ -154,6 +177,7 @@ last_price = {}
 last_meme = {}
 last_pup = {}
 last_meow = {}
+last_fridge = {}
 last_fodl = {}
 def create_spam_dicts():
     """map every channel the client can see to datetime objects
@@ -162,6 +186,7 @@ def create_spam_dicts():
     global last_meme
     global last_pup
     global last_meow
+    global last_fridge
     global last_fodl
     for c in client.get_all_channels():
         if not is_private(c):
@@ -169,6 +194,7 @@ def create_spam_dicts():
             last_meme[c.id] = initial_ts
             last_pup[c.id] = initial_ts
             last_meow[c.id] = initial_ts
+            last_fridge[c.id] = initial_ts
             last_fodl[c.id] = initial_ts
 
 @client.event
@@ -442,6 +468,62 @@ async def meowlist(ctx):
     await message.author.send(embed=embed)
 
 @client.command()
+async def fridge(ctx):
+    message = ctx.message
+    if is_private(message.channel):
+        return
+    elif message.channel.id in settings.no_spam_channels:
+        return
+	# Check spam
+    global last_fridge
+    if message.channel.id not in last_fridge:
+        last_fridge[message.channel.id] = datetime.datetime.now()
+    tdelta = datetime.datetime.now() - last_fridge[message.channel.id]
+    if message.author.id not in SUPERS:
+        if SPAM_THRESHOLD > tdelta.seconds:
+            await post_response(message, "No more fridges for {0} seconds", (SPAM_THRESHOLD - tdelta.seconds))
+            return
+    last_fridge[message.channel.id] = datetime.datetime.now()
+    fridge = db.get_next_fridge()
+    if fridge is None:
+        await post_response(message, "There are no fridges! Add some with !addfridge")
+        return
+    embed = discord.Embed(colour=discord.Colour.orange())
+    embed.title = "fridge #{0} - {1}".format(fridge['id'], fridge['title'])
+    embed.set_author(name=fridge['author'])
+    embed.set_image(url=fridge['url'])
+    await message.channel.send(embed=embed)
+
+@client.command(aliases=["fridges"])
+async def fridgelist(ctx):
+    message = ctx.message
+    fridges = db.get_fridges()
+    if len(fridges) == 0:
+        embed = discord.Embed(colour=discord.Colour.red())
+        embed.title="No fridges"
+        embed.description="There no fridges. Add fridges with `{0}addfridge`".format(COMMAND_PREFIX)
+        await message.author.send(embed=embed)
+        return
+    title="fridge List"
+    description=("Here are all the fridges!")
+    entries = []
+    for fridge in fridges:
+        entries.append(paginator.Entry(str(fridge['id']),fridge['url']))
+
+    # Do paginator for favorites > 10
+    if len(entries) > 10:
+        pages = paginator.Paginator.format_pages(entries=entries,title=title,description=description)
+        p = paginator.Paginator(client,message=message,page_list=pages,as_dm=True)
+        await p.paginate(start_page=1)
+    else:
+        embed = discord.Embed(colour=discord.Colour.teal())
+        embed.title = title
+        embed.description = description
+        for e in entries:
+            embed.add_field(name=e.name,value=e.value,inline=False)
+    await message.author.send(embed=embed)
+
+@client.command()
 async def pup(ctx):
     message = ctx.message
     if is_private(message.channel):
@@ -672,6 +754,30 @@ async def removemeow(ctx, id: str):
         await message.author.send("Meow {0} removed".format(id))
     else:
         await message.author.send("Could not remove meow {0}. It may not exist".format(id))
+
+@client.command()
+async def addfridge(ctx, url: str = None, author: str = None, title: str = None):
+    message = ctx.message
+    if not is_admin(message.author):
+        return
+    elif url is None or author is None or title is None:
+        await post_usage(message, ADDFRIDGE)
+    elif not valid_url(url):
+        await message.author.send("Invalid URL. Valid urls begin with http:// or https://")
+    elif db.add_fridge(url, author, title):
+        await message.author.send("fridge added: {0}".format(title))
+    else:
+        await message.author.send("Could not add fridge {0}. It may already exist".format(url))
+    
+@client.command()
+async def removefridge(ctx, id: str):
+    message = ctx.message
+    if not is_admin(message.author):
+        return
+    elif db.remove_fridge(id):
+        await message.author.send("fridge {0} removed".format(id))
+    else:
+        await message.author.send("Could not remove fridge {0}. It may not exist".format(id))
 
 @client.command(aliases=['muzzle'])
 async def mute(ctx):
