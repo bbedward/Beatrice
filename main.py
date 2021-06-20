@@ -643,29 +643,39 @@ async def fodl(ctx, *, username):
             await message.add_reaction('\U000026D4')
 
     if (isCorrect):
+        clickerStr = "<:arrow_right:856238567713800222> Click here for: "
         if "last" in banTeam: #might need to investigate further but sometimes fah api doesn't have data...
             output+="<:white_check_mark:835347973503451176> " + str(banTeam["last"])+" UTC : Last Completed Banano WU\n" 
         output+="<:white_check_mark:835347973503451176> "+str(banTeam["wus"])+" work units completed so far.\n"
+        output+="<:white_check_mark:835347973503451176> "+str(banTeam["score"])+" points received so far.\n"
         await message.add_reaction('\U0001F6F0')
         if   len(bMinerJSON["payments"]) == 0: 
             output+="<:grey_exclamation:835357988432642049> No payments sent yet. First payment is within 24-36 hours of completing first Work Unit as long as you complete at least 2 work units (progress bar going to 100%) with at least one in each 12 hour period.\n"
             output+="<:banana:838483242113957898>Work Units Pending Payment: "+str(banTeam["wus"])+"\n"
+            output+="<:banana:838483242113957898>Points Pending Payment: "+str(banTeam["score"])+"\n"
             await message.add_reaction('\U0001F6F0')
         elif len(bMinerJSON["payments"]) > 0: #user has received payments
             output+="<:white_check_mark:835347973503451176> " + bMinerJSON["payments"][0]["created_at"] + " UTC was latest payment for user.\n"
             output+="<:banana:838483242113957898>Work Units Pending Payment: "+str(banTeam["wus"]-bMinerJSON["payments"][0]["work_units"])+"\n"
+            output+="<:banana:838483242113957898>Points Pending Payment: "+str(banTeam["score"]-bMinerJSON["payments"][0]["score"])+"\n"
             await message.add_reaction('\U0001F34C')
         await message.add_reaction('\U00002705')
         bonus = False
+        progresso = False
         for cpu in fahBonusJSON:
+            progresso = True
             if cpu["active"]==1:
                 bonus = True
                 output += "<:white_check_mark:835347973503451176> Passkey Bonus Active\n"
-
+                await message.add_reaction('\U0001F510')#lock/key
                 break
-        if bonus ==False and len(fahBonusJSON)>0: 
-            output += "<:grey_exclamation:835357988432642049>  Passkey Bonus     Not Active [Passkey Bonus Info](https://foldingathome.org/support/faq/points/?lng=en-US#what-are-the-qualifications-for-the-qrb)\nPasskey Requires 10 work units completed after adding to client to activate."
-            #add bonus faq
+        if bonus ==False and progresso == True: #passkey in porgress
+            output += "<:grey_exclamation:835357988432642049>  Passkey Bonus     Not Active, but appears to be in progress\n"+clickerStr+ "[Passkey Bonus Info](https://foldingathome.org/support/faq/points/?lng=en-US#what-are-the-qualifications-for-the-qrb)\nPasskey Requires 10 work units completed after adding to client to activate."
+            await message.add_reaction('\U0001F6B8')#caution sign?
+        elif bonus ==False:  #if there is no bonus entries, passkey is not entered (the issue here is a timeout could happen and not be deteceted...)
+            output += "<:grey_exclamation:835357988432642049>  Passkey Bonus     Not Active and does not appear to be entered \n <:arrow_right:856238567713800222> Click here to: [Get a Passkey](https://apps.foldingathome.org/getpasskey)\n"+clickerStr+ "[Passkey Bonus Info](https://foldingathome.org/support/faq/points/?lng=en-US#what-are-the-qualifications-for-the-qrb)\nPasskey Requires 10 work units completed after adding to client to activate."
+            await message.add_reaction('\U00002755')#exclamation mark
+            #add reaction to message
     #This is not explicitly an issue, but calling it out in summary may hep in identifying wrong team issues, calling out the date(s) might also be helpful?
     if nonBanWU > 0:
         output+="<:grey_exclamation:835357988432642049> "+username + " has completed "+ str(nonBanWU) + " number of Work Units for teams other than Banano\n"
@@ -673,8 +683,8 @@ async def fodl(ctx, *, username):
         output+="\nPlease review above errors. After updating client and completing another Work Unit: this test can be ran again to verify your client is set up to track points correctly.\n"
     
     output = output+"\n"
-    if "id" in fahAPIJSON: output+="[F@H Donor Stat Page](https://stats.foldingathome.org/donor/"+str(fahAPIJSON["id"])+") "
-    output+="[Bananominer JSON](https://bananominer.com/user_name/"+username+")\n"
+    if "id" in fahAPIJSON: output+=clickerStr+ "[F@H Donor Stat Page](https://stats.foldingathome.org/donor/"+str(fahAPIJSON["id"])+") \n"
+    output+=clickerStr+"[Bananominer JSON Stats](https://bananominer.com/user_name/"+username+")\n"
     output+="FODL Check might be cached and may not update immediately.\n"
     embed = discord.Embed(colour=discord.Colour.teal())
     embed.title = "FODL Check"
