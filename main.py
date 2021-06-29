@@ -582,6 +582,7 @@ async def puplist(ctx):
 @client.command()
 async def fodl(ctx, *, username):
     message = ctx.message
+    clickerStr = "<:arrow_right:856238567713800222> Click here for: "
     #hard-coding mining channel in here for now. no one else should need this command...
     #could allow this in private message, but don't want to pollute the global with everyones chat id's
     if message.channel.id != 566268199210057728:  # and not is_private(message.channel):
@@ -643,7 +644,6 @@ async def fodl(ctx, *, username):
             await message.add_reaction('\U000026D4')
 
     if (isCorrect):
-        clickerStr = "<:arrow_right:856238567713800222> Click here for: "
         if "last" in banTeam: #might need to investigate further but sometimes fah api doesn't have data...
             output+="<:white_check_mark:835347973503451176> " + str(banTeam["last"])+" UTC : Last Completed Banano WU\n" 
         output+="<:white_check_mark:835347973503451176> "+str(banTeam["wus"])+" work units completed so far.\n"
@@ -666,14 +666,14 @@ async def fodl(ctx, *, username):
             progresso = True
             if cpu["active"]==1:
                 bonus = True
-                output += "<:white_check_mark:835347973503451176> Passkey Bonus Active\n"
+                output += "<:closed_lock_with_key:856254383729016883> Passkey Bonus Active\n"
                 await message.add_reaction('\U0001F510')#lock/key
                 break
         if bonus ==False and progresso == True: #passkey in porgress
-            output += "<:grey_exclamation:835357988432642049>  Passkey Bonus     Not Active, but appears to be in progress\n"+clickerStr+ "[Passkey Bonus Info](https://foldingathome.org/support/faq/points/?lng=en-US#what-are-the-qualifications-for-the-qrb)\nPasskey Requires 10 work units completed after adding to client to activate."
+            output += "<:children_crossing:856246670193983528>  Passkey Bonus     Not Active, but appears to be in progress\n"+clickerStr+ "[Passkey Bonus Info](https://foldingathome.org/support/faq/points/?lng=en-US#what-are-the-qualifications-for-the-qrb)\nPasskey Requires 10 work units completed after adding to client to activate."
             await message.add_reaction('\U0001F6B8')#caution sign?
         elif bonus ==False:  #if there is no bonus entries, passkey is not entered (the issue here is a timeout could happen and not be deteceted...)
-            output += "<:grey_exclamation:835357988432642049>  Passkey Bonus     Not Active and does not appear to be entered \n <:arrow_right:856238567713800222> Click here to: [Get a Passkey](https://apps.foldingathome.org/getpasskey)\n"+clickerStr+ "[Passkey Bonus Info](https://foldingathome.org/support/faq/points/?lng=en-US#what-are-the-qualifications-for-the-qrb)\nPasskey Requires 10 work units completed after adding to client to activate."
+            output += "<:grey_exclamation:856251287104782366>  Passkey Bonus     Not Active and does not appear to be entered \n <:arrow_right:856238567713800222> Click here to: [Get a Passkey](https://apps.foldingathome.org/getpasskey)\n"+clickerStr+ "[Passkey Bonus Info](https://foldingathome.org/support/faq/points/?lng=en-US#what-are-the-qualifications-for-the-qrb)\nPasskey Requires 10 work units completed after adding to client to activate."
             await message.add_reaction('\U00002755')#exclamation mark
             #add reaction to message
     #This is not explicitly an issue, but calling it out in summary may hep in identifying wrong team issues, calling out the date(s) might also be helpful?
