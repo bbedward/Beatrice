@@ -897,7 +897,7 @@ async def noimages(ctx):
 			imagesperm = discord.utils.get(message.guild.roles,name=settings.IMAGES_ROLE)
 			for member in message.mentions:
 				await member.add_roles(imagesperm)
-			await message.add_reaction('\U0001FE0F')
+			await message.add_reaction('\U0001F485')
 							   
 @client.command()
 async def allowimages(ctx):
