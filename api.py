@@ -9,6 +9,7 @@ logger = util.get_logger("discord")
 CG_BTC_CACHE_KEY = 'beatrice_btccache'
 CG_NANO_CACHE_KEY = 'beatrice_nanocache'
 CG_BAN_CACHE_KEY = 'beatrice_banocache'
+CG_STATUS_CACHE_KEY = 'beatrice_statuscache'
 
 CGNANO_URL = 'https://api.coingecko.com/api/v3/coins/nano?localization=false&tickers=true&market_data=true&community_data=false&developer_data=false&sparkline=false'
 CGBTC_URL = 'https://api.coingecko.com/api/v3/coins/bitcoin?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false'
@@ -22,6 +23,26 @@ async def json_get(reqUrl):
                 return jsonResp
     except BaseException:
         return None
+
+# Gets and returns simple Banano price information
+async def get_status():
+    redis = await util.get_redis()
+    response = await redis.get(CG_STATUS_CACHE_KEY)
+    if response is None:
+        cg_response = await json_get(BANANO_URL)
+        if cg_response is not None and 'market_data' in cg_response:
+            satprice = float(cg_response["market_data"]["current_price"]["sats"])
+            usdprice = float(cg_response["market_data"]["current_price"]["usd"])
+            ret = {
+                "satoshi": satprice,
+                "usdprice": usdprice
+            }
+            await redis.set(CG_STATUS_CACHE_KEY, json.dumps(ret), expire=300) # Cache result for 5 minutes
+            return ret
+        else:
+            return None
+    else:
+        return json.loads(response)
 
 async def get_banano_price():
     redis = await util.get_redis()
