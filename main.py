@@ -206,6 +206,25 @@ async def on_ready():
     create_spam_dicts()
     await client.change_presence(activity=discord.Game(settings.playing_status))
     asyncio.get_event_loop().create_task(unsilence_users())
+    update_sidebar_status.start() #start the update_sidebar_status() loop
+
+# Store the last unit the status is displayed as
+status_unit = None
+
+# Periodic task to update activity status to price (in sats and USD)
+@tasks.loop(seconds=10.0)
+async def update_sidebar_status():
+    global status_unit
+    banano = await api.get_status()
+    if banano is not None:
+        if status_unit == 'nano':
+            await client.change_presence(activity=discord.Game(f"{banano['satoshi']:.1f} sats\n"))
+            status_unit = 'ban'
+        else:
+            await client.change_presence(activity=discord.Game(f"${banano['usdprice']:.4f}\n"))
+            status_unit = 'nano'
+    else:
+         await client.change_presence(activity=discord.Game(f"Error checking prices\n"))
 
 @client.event
 async def on_member_join(member):
@@ -336,7 +355,6 @@ async def price(ctx):
         embed.description += f"Volume (24H)    : {banano['volume']:,.2f} BTC\n"
         embed.description += f"Market Cap      : ${int(banano['mcap']):,}\n"
         embed.description += "```"
-        await client.change_presence(activity=discord.Game(f"{int(banano['satoshi'])} sats\n"))
     embed.description += "\n**NANO**"
     if nano is None:
         embed.description += '\nCurrently Unavailable\n'
