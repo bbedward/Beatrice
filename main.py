@@ -218,13 +218,13 @@ async def update_sidebar_status():
     banano = await api.get_status()
     if banano is not None:
         if status_unit == 'nano':
-            await client.change_presence(activity=discord.Game(f"{banano['satoshi']:.1f} sats\n"))
+            await client.change_presence(activity=discord.Game(f"{banano['satoshi']:.1f} sats"))
             status_unit = 'ban'
         else:
-            await client.change_presence(activity=discord.Game(f"${banano['usdprice']:.4f}\n"))
+            await client.change_presence(activity=discord.Game(f"${banano['usdprice']:.4f}"))
             status_unit = 'nano'
     else:
-         await client.change_presence(activity=discord.Game(f"Error checking prices\n"))
+         await client.change_presence(activity=discord.Game(f"Error checking prices"))
 
 @client.event
 async def on_member_join(member):
