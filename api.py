@@ -31,8 +31,14 @@ async def get_status():
     if response is None:
         cg_response = await json_get(BANANO_URL)
         if cg_response is not None and 'market_data' in cg_response:
-            satprice = float(cg_response["market_data"]["current_price"]["sats"])
-            usdprice = float(cg_response["market_data"]["current_price"]["usd"])
+            usd_prices = []
+            sat_prices = []
+            for t in cg_response['tickers']:
+                        if t['target'] == 'USDT' and t['market']['name'] == 'CoinEx':
+                            usd_prices.append(float(t['last']))
+                            sat_prices.append(float(t['converted_last']['btc']*100000000))
+            usdprice = sum(usd_prices) / len(usd_prices)
+            satprice = sum(sat_prices) / len(sat_prices)
             ret = {
                 "satoshi": satprice,
                 "usdprice": usdprice
@@ -60,8 +66,14 @@ async def get_banano_price():
             if t['target'] == 'XRB':
                 xrb_prices.append(float(t['last']))
         banpernan = sum(xrb_prices) / len(xrb_prices)
-        satprice = float(response["market_data"]["current_price"]["btc"]) * 100000000
-        usdprice = float(response["market_data"]["current_price"]["usd"])
+        usd_prices = []
+        sat_prices = []
+        for t in response['tickers']:
+                    if t['target'] == 'USDT' and t['market']['name'] == 'CoinEx':
+                        usd_prices.append(float(t['last']))
+                        sat_prices.append(float(t['converted_last']['btc']*100000000))
+        usdprice = sum(usd_prices) / len(usd_prices)
+        satprice = sum(sat_prices) / len(sat_prices)
         volumebtc = float(response["market_data"]["total_volume"]["btc"])
         # Other data
         circ_supply = float(response['market_data']['circulating_supply'])
@@ -160,12 +172,12 @@ async def get_all_prices():
             if result is not None:
                 ret.append(task.result())
     return ret
-        
+
 async def getFODLJSON(username):
     fahAPI = "https://api.foldingathome.org/user/"+username
     bMinerAPI = "https://bananominer.com/user_name/"+username
     fahBonusAPI = "https://api.foldingathome.org/bonus?user="+username
-    
+
     tasks = [
         json_get(fahAPI),
         json_get(bMinerAPI),
