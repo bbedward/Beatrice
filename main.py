@@ -69,7 +69,7 @@ MEOW = {
 MEOWLIST = {
 		"CMD"      : "{0}meowlist".format(COMMAND_PREFIX),
         "INFO"     : "Receive private message with a list of all meows stored with the bot"
-} 
+}
 
 FRIDGE = {
 		"CMD"      : "{0}fridge".format(COMMAND_PREFIX),
@@ -79,7 +79,7 @@ FRIDGE = {
 FRIDGELIST = {
 		"CMD"      : "{0}fridgelist".format(COMMAND_PREFIX),
         "INFO"     : "Receive private message with a list of all fridges stored with the bot"
-} 
+}
 
 FODL = {
 		"CMD"      : "{0}fodl".format(COMMAND_PREFIX),
@@ -113,42 +113,42 @@ ADDFRIDGE = {
 
 REMOVEPUP = {
    		"CMD"      : "{0}removepup, takes: url or id".format(COMMAND_PREFIX),
-        "INFO"     : "Remove pup matching URL or ID from the bot's pup list" 
+        "INFO"     : "Remove pup matching URL or ID from the bot's pup list"
 }
 
 REMOVEMEME = {
    		"CMD"      : "{0}removememe, takes: url or id".format(COMMAND_PREFIX),
-        "INFO"     : "Remove meme matching URL or ID from the bot's meme list" 
+        "INFO"     : "Remove meme matching URL or ID from the bot's meme list"
 }
 
 REMOVEMEOW = {
    		"CMD"      : "{0}removemeow, takes: url or id".format(COMMAND_PREFIX),
-        "INFO"     : "Remove meow matching URL or ID from the bot's meow list" 
+        "INFO"     : "Remove meow matching URL or ID from the bot's meow list"
 }
 
 REMOVEFRIDGE = {
    		"CMD"      : "{0}removefridge, takes: url or id".format(COMMAND_PREFIX),
-        "INFO"     : "Remove fridge matching URL or ID from the bot's fridge list" 
+        "INFO"     : "Remove fridge matching URL or ID from the bot's fridge list"
 }
 
 MUTE = {
    		"CMD"      : "{0}mute or {0}muzzle, takes: user, duration (optional)".format(COMMAND_PREFIX),
-        "INFO"     : "mute @bbedward 60 = mute bbedward for 60 minutes" 
+        "INFO"     : "mute @bbedward 60 = mute bbedward for 60 minutes"
 }
 
 UNMUTE = {
    		"CMD"      : "{0}unmute or {0}unmuzzle, user mention".format(COMMAND_PREFIX),
-        "INFO"     : "Unmute mentioned user(s)" 
+        "INFO"     : "Unmute mentioned user(s)"
 }
 
 NOIMAGES = {
    		"CMD"      : "{0}noimages, user mention".format(COMMAND_PREFIX),
-        "INFO"     : "Stops user posting images" 
+        "INFO"     : "Stops user posting images"
 }
 
 ALLOWIMAGES = {
    		"CMD"      : "{0}allowimages, user mention".format(COMMAND_PREFIX),
-        "INFO"     : "Allows user to post images" 
+        "INFO"     : "Allows user to post images"
 }
 
 KICK = {
@@ -236,7 +236,7 @@ async def on_member_join(member):
 async def on_reaction_add(reaction, user):
 	if reaction.emoji == '\u274C' and reaction.count >= 5 and reaction.message.channel.id == 585626036574748684:
 		await reaction.message.delete()
-		
+
 # Periodic check job to unsilence users
 async def unsilence_users():
 	try:
@@ -347,7 +347,7 @@ async def price(ctx):
         embed.description += "```"
         embed.description += f"Rank            : #{banano['rank']}\n"
         embed.description += f"Price  (NANO)   : {banano['xrb']:.6f} NANO\n"
-        embed.description += f"Price  (BTC)    : {int(banano['satoshi'])} sats\n"
+        embed.description += f"Price  (BTC)    : {banano['satoshi']:.2f} sats\n"
         embed.description += f"Price  (USD)    : ${banano['usdprice']:.6f}\n"
         banpernan = 1/banano['xrb']
         if settings.VESPRICE and 'bolivar' in banano:
@@ -610,11 +610,11 @@ async def fodl(ctx, *, username):
         last_fodl[message.channel.id] = datetime.datetime.now()
     tdelta = datetime.datetime.now() - last_fodl[message.channel.id]
     if message.author.id not in SUPERS:
-        if 5 > tdelta.seconds: #i think the global spam limits would be too high. 
+        if 5 > tdelta.seconds: #i think the global spam limits would be too high.
             await message.author.send("No more fodl for {0} seconds".format(5 - tdelta.seconds))
             return
     last_fodl[message.channel.id] = datetime.datetime.now()
-    
+
     #a pretty safe name check. could be better
     if len(username) > 20 or len(username) < 5 or username.isalnum()==False:
         await message.author.send("Definitely not a bananominer username.")
@@ -649,25 +649,25 @@ async def fodl(ctx, *, username):
         isCorrect = False
         await message.add_reaction('\U000026D4')
 
-    elif "teams" in fahAPIJSON: 
+    elif "teams" in fahAPIJSON:
         for team in fahAPIJSON["teams"]:
             if team["team"] == 234980 and "wus" in team:
                 banTeam = team
             elif "wus" in team:
-                nonBanWU += team["wus"]    
+                nonBanWU += team["wus"]
         if  banTeam == {}:
-            output+="<:x:835354642308661278> User: \""+ username + "\" has not folded for banano team ID 234980\n" 
+            output+="<:x:835354642308661278> User: \""+ username + "\" has not folded for banano team ID 234980\n"
             isCorrect = False
             await message.add_reaction('\U000026D4')
 
     if (isCorrect):
         clickerStr = "<:arrow_right:856238567713800222> Click here for: "
         if "last" in banTeam: #might need to investigate further but sometimes fah api doesn't have data...
-            output+="<:white_check_mark:835347973503451176> " + str(banTeam["last"])+" UTC : Last Completed Banano WU\n" 
+            output+="<:white_check_mark:835347973503451176> " + str(banTeam["last"])+" UTC : Last Completed Banano WU\n"
         output+="<:white_check_mark:835347973503451176> "+str(banTeam["wus"])+" work units completed so far.\n"
         output+="<:white_check_mark:835347973503451176> "+str(banTeam["score"])+" points received so far.\n"
         await message.add_reaction('\U0001F6F0')
-        if   len(bMinerJSON["payments"]) == 0: 
+        if   len(bMinerJSON["payments"]) == 0:
             output+="<:grey_exclamation:835357988432642049> No payments sent yet. First payment is within 24-36 hours of completing first Work Unit as long as you complete at least 2 work units (progress bar going to 100%) with at least one in each 12 hour period.\n"
             output+="<:banana:838483242113957898>Work Units Pending Payment: "+str(banTeam["wus"])+"\n"
             output+="<:banana:838483242113957898>Points Pending Payment: "+str(banTeam["score"])+"\n"
@@ -699,7 +699,7 @@ async def fodl(ctx, *, username):
         output+="<:grey_exclamation:835357988432642049> "+username + " has completed "+ str(nonBanWU) + " number of Work Units for teams other than Banano\n"
     if (isCorrect==False):
         output+="\nPlease review above errors. After updating client and completing another Work Unit: this test can be ran again to verify your client is set up to track points correctly.\n"
-    
+
     output = output+"\n"
     if "id" in fahAPIJSON: output+=clickerStr+ "[F@H Donor Stat Page](https://stats.foldingathome.org/donor/"+str(fahAPIJSON["id"])+") \n"
     output+=clickerStr+"[Bananominer JSON Stats](https://bananominer.com/user_name/"+username+")\n"
@@ -724,7 +724,7 @@ async def addmeme(ctx, url: str = None, author: str = None, title: str = None):
         await message.author.send("Meme added: {0}".format(title))
     else:
         await message.author.send("Could not add meme {0}. It may already exist".format(url))
-    
+
 @client.command()
 async def removememe(ctx, id: str):
     message = ctx.message
@@ -748,7 +748,7 @@ async def addpup(ctx, url: str = None, author: str = None, title: str = None):
         await message.author.send("Pup added: {0}".format(title))
     else:
         await message.author.send("Could not add Pup {0}. It may already exist".format(url))
-    
+
 @client.command()
 async def removepup(ctx, id: str):
     message = ctx.message
@@ -772,7 +772,7 @@ async def addmeow(ctx, url: str = None, author: str = None, title: str = None):
         await message.author.send("Meow added: {0}".format(title))
     else:
         await message.author.send("Could not add meow {0}. It may already exist".format(url))
-    
+
 @client.command()
 async def removemeow(ctx, id: str):
     message = ctx.message
@@ -796,7 +796,7 @@ async def addfridge(ctx, url: str = None, author: str = None, title: str = None)
         await message.author.send("fridge added: {0}".format(title))
     else:
         await message.author.send("Could not add fridge {0}. It may already exist".format(url))
-    
+
 @client.command()
 async def removefridge(ctx, id: str):
     message = ctx.message
@@ -906,7 +906,7 @@ async def deport(ctx):
 				await member.remove_roles(citizenship)
 				await post_response(message, settings.DEPORT, mention_id=member.id)
 			await message.add_reaction('\U0001F6F3')
-							   
+
 @client.command()
 async def noimages(ctx):
 	message = ctx.message
@@ -916,7 +916,7 @@ async def noimages(ctx):
 			for member in message.mentions:
 				await member.add_roles(imagesperm)
 			await message.add_reaction('\U0001F485')
-							   
+
 @client.command()
 async def allowimages(ctx):
 	message = ctx.message
