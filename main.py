@@ -347,7 +347,7 @@ async def price(ctx):
         embed.description += "```"
         embed.description += f"Rank            : #{banano['rank']}\n"
         embed.description += f"Price  (NANO)   : {banano['xrb']:.6f} NANO\n"
-        embed.description += f"Price  (BTC)    : {banano['satoshi']:.2f} sats\n"
+        embed.description += f"Price  (BTC)    : {banano['satoshi']:.1f} sats\n"
         embed.description += f"Price  (USD)    : ${banano['usdprice']:.6f}\n"
         banpernan = 1/banano['xrb']
         if settings.VESPRICE and 'bolivar' in banano:
