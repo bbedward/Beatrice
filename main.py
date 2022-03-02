@@ -359,6 +359,7 @@ async def price(ctx):
     if nano is None:
         embed.description += '\nCurrently Unavailable\n'
     else:
+        banpernan = nano['usdprice'] / banano['usdprice']
         embed.description += "```"
         embed.description += f"Rank            : #{nano['rank']}\n"
         embed.description += f"Price  (Kucoin) : {nano['kucoin']:.8f} BTC\n"
