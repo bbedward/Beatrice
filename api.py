@@ -174,9 +174,9 @@ async def get_all_prices():
     return ret
 
 async def getFODLJSON(username):
-    fahAPI = "https://api.foldingathome.org/user/"+username
+    fahAPI = "https://api2.foldingathome.org/user/"+username
     bMinerAPI = "https://bananominer.com/user_name/"+username
-    fahBonusAPI = "https://api.foldingathome.org/bonus?user="+username
+    fahBonusAPI = "https://api2.foldingathome.org/bonus?user="+username
 
     tasks = [
         json_get(fahAPI),
