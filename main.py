@@ -229,7 +229,7 @@ async def update_sidebar_status():
 @client.event
 async def on_member_join(member):
 	if db.silenced(member.id):
-		muzzled = discord.utils.get(member.guild.roles,name=settings.muzzled_role)
+		muzzled = member.guild.get_role(settings.muzzled_role)
 		await member.add_roles(muzzled)
 
 @client.event
@@ -265,7 +265,7 @@ def has_admin_role(roles):
     """Check if user has an admin role defined in our settings"""
 
     for r in roles:
-        if r.name in settings.admin_roles:
+        if r.id in settings.admin_roles:
             return True
     return False
 
@@ -813,7 +813,7 @@ async def mute(ctx):
 	message = ctx.message
 	if is_admin(message.author):
 		if len(message.mentions) > 0:
-			muzzled = discord.utils.get(message.guild.roles,name=settings.muzzled_role)
+			muzzled = message.guild.get_role(settings.muzzled_role)
 			duration = find_amount(message.content)
 			expiration = None
 			if duration is not None:
@@ -834,7 +834,7 @@ async def unmute(ctx):
 	message = ctx.message
 	if is_admin(message.author):
 		if len(message.mentions) > 0:
-			muzzled = discord.utils.get(message.guild.roles,name=settings.muzzled_role)
+			muzzled = message.guild.get_role(settings.muzzled_role)
 			for member in message.mentions:
 				await member.remove_roles(muzzled)
 				if not db.unsilence(member.id):
@@ -847,7 +847,7 @@ async def arrest(ctx):
 	message = ctx.message
 	if is_admin(message.author):
 		if len(message.mentions) > 0:
-			jail = discord.utils.get(message.guild.roles,name=settings.ARREST_ROLE)
+			jail = message.guild.get_role(settings.ARREST_ROLE)
 			for member in message.mentions:
 				await member.add_roles(jail)
 				await post_response(message, settings.RIGHTS, mention_id=member.id, channel_id=settings.JAIL_ID)
@@ -859,7 +859,7 @@ async def release(ctx):
 	if is_admin(message.author):
 		if len(message.mentions) > 0:
 			# Tip unban too
-			jail = discord.utils.get(message.guild.roles,name=settings.ARREST_ROLE)
+			jail = message.guild.get_role(settings.ARREST_ROLE)
 			for member in message.mentions:
 				await member.remove_roles(jail)
 				await post_response(message, settings.RELEASE, mention_id=member.id)
@@ -869,8 +869,8 @@ async def troll(ctx):
 	message = ctx.message
 	if is_admin(message.author):
 		if len(message.mentions) > 0:
-			troll = discord.utils.get(message.guild.roles,name=settings.TROLL_ROLL)
-			citizenship = discord.utils.get(message.guild.roles,name=settings.CITIZEN_ROLE)
+			troll = message.guild.get_role(settings.TROLL_ROLE)
+			citizenship = message.guild.get_role(settings.CITIZEN_ROLE)
 			for member in message.mentions:
 				await member.add_roles(troll)
 				await member.remove_roles(citizenship)
@@ -881,7 +881,7 @@ async def untroll(ctx):
 	message = ctx.message
 	if is_admin(message.author):
 		if len(message.mentions) > 0:
-			troll = discord.utils.get(message.guild.roles,name=settings.TROLL_ROLL)
+			troll = message.guild.get_role(settings.TROLL_ROLE)
 			for member in message.mentions:
 				await member.remove_roles(troll)
 				await post_response(message, settings.UNTROLL, mention_id=member.id)
@@ -891,7 +891,7 @@ async def citizenship(ctx):
 	message = ctx.message
 	if is_admin(message.author):
 		if len(message.mentions) > 0:
-			citizenship = discord.utils.get(message.guild.roles,name=settings.CITIZEN_ROLE)
+			citizenship = message.guild.get_role(settings.CITIZEN_ROLE)
 			for member in message.mentions:
 				await member.add_roles(citizenship)
 				await post_response(message, settings.CITIZENSHIP, mention_id=member.id)
@@ -902,7 +902,7 @@ async def deport(ctx):
 	message = ctx.message
 	if is_admin(message.author):
 		if len(message.mentions) > 0:
-			citizenship = discord.utils.get(message.guild.roles,name=settings.CITIZEN_ROLE)
+			citizenship = message.guild.get_role(settings.CITIZEN_ROLE)
 			for member in message.mentions:
 				await member.remove_roles(citizenship)
 				await post_response(message, settings.DEPORT, mention_id=member.id)
@@ -913,7 +913,7 @@ async def noimages(ctx):
 	message = ctx.message
 	if is_admin(message.author):
 		if len(message.mentions) > 0:
-			imagesperm = discord.utils.get(message.guild.roles,name=settings.IMAGES_ROLE)
+			imagesperm = message.guild.get_role(settings.IMAGES_ROLE)
 			for member in message.mentions:
 				await member.add_roles(imagesperm)
 			await message.add_reaction('\U0001F485')
@@ -923,7 +923,7 @@ async def allowimages(ctx):
 	message = ctx.message
 	if is_admin(message.author):
 		if len(message.mentions) > 0:
-			imagesperm = discord.utils.get(message.guild.roles,name=settings.IMAGES_ROLE)
+			imagesperm = message.guild.get_role(settings.IMAGES_ROLE)
 			for member in message.mentions:
 				await member.remove_roles(imagesperm)
 			await message.add_reaction('\U0001F3A8')
