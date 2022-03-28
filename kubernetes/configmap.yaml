@@ -24,7 +24,7 @@ data:
     # Banano-discord
     ARREST_ROLE=428615122336874496
     CITIZEN_ROLE=431171347427622913
-    TROLL_ROLL=600771737138888792
+    TROLL_ROLE=600771737138888792
     # Arrest messages
     RIGHTS="```You have been arrested by the BRPD for crimes against the Banano Republic. You have the right to remain unripe. Anything you say can and will be used against you in a banano court. You have the right to have an orangutan. If you cannot afford one, one will be appointed to you by the court. Until your orangutan arrives, you will spend your time in #jail, bail is set at 10 BANANO.```"
     RELEASE="```You have been released from Jail!```"
