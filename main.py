@@ -248,7 +248,7 @@ async def unsilence_users():
 			elif datetime.datetime.now() >= s.expiration:
 				for guild in client.guilds:
 					if guild.id == s.server_id:
-						muzzled = discord.utils.get(guild.roles,name=settings.muzzled_role)
+						muzzled = guild.get_role(settings.muzzled_role)
 						for member in guild.members:
 							if member.id == int(s.user_id):
 								await member.remove_roles(muzzled)
