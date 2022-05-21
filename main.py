@@ -85,6 +85,10 @@ FODL = {
 		"CMD"      : "{0}fodl".format(COMMAND_PREFIX),
         "INFO"     : "Verifies Folding@Home Bananominer Client configuration after completing 1 Work Unit in banano-mining channel"
 }
+FARMS = {
+		"CMD"      : "{0}farms".format(COMMAND_PREFIX),
+        "INFO"     : "Fetches current TVL and APR for all active wrapped banano farms"
+}
 ### Admin commands
 ADDPUP = {
 		"CMD"      : "{0}addpup, takes: url, author, title".format(COMMAND_PREFIX),
@@ -163,7 +167,7 @@ BAN = {
 
 ### Dictionary of different command categories
 COMMANDS = {
-		"USER_COMMANDS"          : [PRICE, MEME, MEMELIST, PUP, PUPLIST, MEOW, MEOWLIST, FRIDGE, FRIDGELIST, FODL],
+		"USER_COMMANDS"          : [PRICE, MEME, MEMELIST, PUP, PUPLIST, MEOW, MEOWLIST, FRIDGE, FRIDGELIST, FODL, FARMS],
         "ADMIN_COMMANDS"         : [ADDPUP, ADDMEME, ADDMEOW, ADDFRIDGE, REMOVEPUP, REMOVEMEME, REMOVEMEOW, REMOVEFRIDGE, MUTE, UNMUTE, KICK, BAN],
 }
 
@@ -179,6 +183,7 @@ last_pup = {}
 last_meow = {}
 last_fridge = {}
 last_fodl = {}
+last_farms = {}
 def create_spam_dicts():
     """map every channel the client can see to datetime objects
         this way we can have channel-specific spam prevention"""
@@ -188,6 +193,7 @@ def create_spam_dicts():
     global last_meow
     global last_fridge
     global last_fodl
+    global last_farms
     for c in client.get_all_channels():
         if not is_private(c):
             last_price[c.id] = initial_ts
@@ -196,6 +202,7 @@ def create_spam_dicts():
             last_meow[c.id] = initial_ts
             last_fridge[c.id] = initial_ts
             last_fodl[c.id] = initial_ts
+            last_farms[c.id] = initial_ts
 
 @client.event
 async def on_ready():
@@ -710,8 +717,53 @@ async def fodl(ctx, *, username):
     embed.description = output
     await message.author.send( embed=embed)
 
-### Admin Commands
 
+@client.command(aliases=["wban"])
+async def farms(ctx):
+    message = ctx.message
+    global last_farms
+    if message.channel.id not in last_farms:
+        last_farms[message.channel.id] = datetime.datetime.now() - datetime.timedelta(seconds=SPAM_THRESHOLD) 
+
+    tdelta = datetime.datetime.now() - last_farms[message.channel.id]
+    if message.author.id not in SUPERS:
+        if SPAM_THRESHOLD > tdelta.seconds:
+            await message.author.send("No more farms for {0} seconds".format(SPAM_THRESHOLD - tdelta.seconds))
+            return
+
+    last_farms[message.channel.id] = datetime.datetime.now()
+    #Get the API response
+    apiResponse = await api.getWBANFARM()
+    #In case something went wrong 
+    if apiResponse == None or apiResponse == []:
+        await ctx.send("API Error")
+        return
+        
+    #Sort the response so that the networks are always in the same order
+    apiResponse.sort(key=lambda y: y[0])
+
+    output = ""
+    #Maps networks to their corresponding wban emoji. This part will need to be updated for future networks (will map to bsc emoji by default)
+    emoji_map = {"binance-smart-chain":"<:wbanbsc:835977496389877802>", "fantom":"<:wbanftm:949720720110419999>", "polygon":"<:wbanpoly:884560016928043038>"} 
+    for (network,farms) in apiResponse:
+        #Get the emoji for this network 
+        if network in emoji_map:
+            emoji = emoji_map[network]
+        else:
+            emoji = emoji_Map["binance-smart-chain"]
+        #Build the output 
+        output += f"\n {emoji} **{str.title(network)}**"
+        output += "```"
+        for (pair,tvl,apr) in farms: 
+            output += f"{pair}: {apr}% APR (${tvl} TVL) \n"
+        output += "```"
+    embed = discord.Embed(colour=discord.Colour.green())
+    embed.title = "wBAN Farms"
+    embed.description = output
+    await message.channel.send(embed=embed)
+
+
+### Admin Commands
 @client.command()
 async def addmeme(ctx, url: str = None, author: str = None, title: str = None):
     message = ctx.message
