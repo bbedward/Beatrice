@@ -38,3 +38,5 @@ data:
     KICK_LOG=633355505556783104
     # Jail channel id (For sending messages to recently jailed people, who may not be able to see the channel they were just jailed in)
     JAIL_ID=416306504124071938
+    #zapper api key for wban farms. Base64 encoding of public one on https://studio.zapper.fi/docs/apis/endpoints-api-keys
+    ZAPPER_API="OTZlMGNjNTEtYTYyZS00MmNhLWFjZWUtOTEwZWE3ZDJhMjQxOg=="
