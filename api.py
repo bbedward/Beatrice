@@ -15,9 +15,9 @@ CGNANO_URL = 'https://api.coingecko.com/api/v3/coins/nano?localization=false&tic
 CGBTC_URL = 'https://api.coingecko.com/api/v3/coins/bitcoin?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false'
 BANANO_URL = 'https://api.coingecko.com/api/v3/coins/banano?localization=false&tickers=true&market_data=true&community_data=false&developer_data=false&sparkline=false'
 
-async def json_get(reqUrl):
+async def json_get(reqUrl,headers=""):
     try:
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(headers=headers) as session:
             async with session.get(reqUrl, timeout=10) as resp:
                 jsonResp = await resp.json()
                 return jsonResp
@@ -197,3 +197,54 @@ async def getFODLJSON(username):
                     ret[2] = result
     return ret
 
+async def getWBANFARM():
+    output = [] 
+    #Start off by querying the API to find out all networks wban is listed on
+    #Hopefully this means that if a new network is added there won't be a need to update this 
+    r = await json_get(f"https://api.zapper.fi/v2/apps/banano",headers={'accept': '*/*','Authorization': f'Basic {settings.ZAPPER_API}'})
+    networks = []
+    if r is None or 'supportedNetworks' not in r:
+        return None    
+
+    #Gather all the found networks
+    for net in r["supportedNetworks"]:
+        networks.append(net["network"])
+
+    tasks = [] 
+    ret = []
+
+    #Create a task for each network 
+    for network in networks:
+        tasks.append(json_get(f"https://api.zapper.fi/v2/apps/banano/positions?network={network}&groupId=farm",headers={'accept': '*/*','Authorization': f'Basic {settings.ZAPPER_API}'}))
+
+    while len(tasks):
+        done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+        for task in done:
+            result = task.result()
+            #Verify the task worked 
+            if result is not None and len(result) > 0:
+                farms = []
+                #Go through all the farms for this network 
+                for farm in result:
+                    try: 
+                        #Get the information on current network 
+                        network = farm["network"]
+                        if bool(farm["dataProps"]["isActive"]): #Ensure network is active 
+                            for tokens in farm["tokens"]: #Recover the token pairs used in the network 
+                                if tokens["metaType"] == "supplied" and tokens["type"] == "app-token" :
+                                    tokens_in_farm = []
+                                    for token in tokens["tokens"]:
+                                        tokens_in_farm.append(token["symbol"])
+                                    if len(tokens_in_farm) > 1 and tokens_in_farm[1] == "wBAN": #Some basic ordering, such that wban comes first 
+                                        tokens_in_farm[0],tokens_in_farm[1] = tokens_in_farm[1],tokens_in_farm[0]
+                            token_string = "-".join(tokens_in_farm) #Get a string representation of the pair 
+                            #Get TVL and APR, round them 
+                            tvl = int(farm["dataProps"]["totalValueLocked"])
+                            apr = round(100 * float(farm["dataProps"]["yearlyROI"]))
+                            farms.append((token_string,tvl,apr))
+                    except:
+                        return None
+                #Add information of this network to output 
+                output.append((network,farms))
+
+    return output 
