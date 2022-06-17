@@ -34,4 +34,4 @@ KICK_LOG=633355534535491605
 JAIL_ID=416306504124071938
 
 #zapper api key for wban farms. Base64 encoding of public one on https://studio.zapper.fi/docs/apis/endpoints-api-keys
-ZAPPER_API="OTZlMGNjNTEtYTYyZS00MmNhLWFjZWUtOTEwZWE3ZDJhMjQxOg=="
+ZAPPER_API="OTZlMGNjNTEtYTYyZS00MmNhLWFjZWUtOTEwZWE3ZDJhMjQx=="

@@ -211,12 +211,11 @@ async def getWBANFARM():
         networks.append(net["network"])
 
     tasks = [] 
-    ret = []
 
     #Create a task for each network 
     for network in networks:
         tasks.append(json_get(f"https://api.zapper.fi/v2/apps/banano/positions?network={network}&groupId=farm",headers={'accept': '*/*','Authorization': f'Basic {settings.ZAPPER_API}'}))
-
+    
     while len(tasks):
         done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         for task in done:
@@ -239,8 +238,17 @@ async def getWBANFARM():
                                         tokens_in_farm[0],tokens_in_farm[1] = tokens_in_farm[1],tokens_in_farm[0]
                             token_string = "-".join(tokens_in_farm) #Get a string representation of the pair 
                             #Get TVL and APR, round them 
-                            tvl = int(farm["dataProps"]["totalValueLocked"])
-                            apr = round(100 * float(farm["dataProps"]["yearlyROI"]))
+                            try: #Naming of these may change, adapt in those cases.
+                                tvl = int(farm["dataProps"]["liquidity"])
+                            except:
+                                try:
+                                    tvl = int(farm["dataProps"]["totalValueLocked"])
+                                except:
+                                    tvl = "API Error"
+                            try:
+                                apr = round(100 * float(farm["dataProps"]["yearlyROI"]))
+                            except:
+                                apr = "API Error"
                             farms.append((token_string,tvl,apr))
                     except:
                         return None
