@@ -750,10 +750,10 @@ async def farms(ctx):
         if network in emoji_map:
             emoji = emoji_map[network]
         else:
-            emoji = emoji_Map["binance-smart-chain"]
+            emoji = emoji_map["binance-smart-chain"]
         #Build the output 
         output += f"\n {emoji} **{str.title(network)}**"
-        output += "```"
+        output += "\n```"
         for (pair,tvl,apr) in farms: 
             output += f"{pair}: {apr}% APR (${tvl} TVL) \n"
         output += "```"
