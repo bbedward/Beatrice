@@ -16,5 +16,5 @@ spec:
             args: ["python vesprice.py"]
             env:
               - name: REDIS_HOST
-                value: redis-0.redis
+                value: redis.redis
           restartPolicy: OnFailure
