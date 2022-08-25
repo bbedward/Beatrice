@@ -24,7 +24,7 @@ spec:
         args: ["cp /config/settings.py .; python main.py"]
         env:
           - name: REDIS_HOST
-            value: redis-0.redis
+            value: redis.redis
           - name: DB_PATH
             value: /database/discord.db
           - name: BOT_TOKEN
