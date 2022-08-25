@@ -61,11 +61,7 @@ async def get_banano_price():
         response = json.loads(response)
     if response is not None and 'market_data' in response:
         # Get price and volume
-        xrb_prices = []
-        for t in response['tickers']:
-            if t['target'] == 'XRB':
-                xrb_prices.append(float(t['last']))
-        banpernan = sum(xrb_prices) / len(xrb_prices)
+        banpernan = float(response['market_data']['market_cap']['btc']) / float(await redis.get("nano-btc-price"))
         usd_prices = []
         sat_prices = []
         for t in response['tickers']:
@@ -109,6 +105,8 @@ async def get_nano_price():
     else:
         response = json.loads(response)
     if response is not None and 'market_data' in response:
+        # Cache nano-btc price
+        await redis.set("nano-btc-price", f"{response['market_data']['market_cap']['btc']:.16f}")
         # Get price and volume
         volumebtc = float(response["market_data"]["total_volume"]["btc"])
         kucoinprice = 0
