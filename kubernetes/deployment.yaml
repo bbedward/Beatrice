@@ -32,6 +32,11 @@ spec:
               secretKeyRef:
                 name: beatrice
                 key: bot_token
+          - name: ZAPPER_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: beatrice
+                key: zapper_api_key
         volumeMounts:
         - name: conf
           mountPath: /config
