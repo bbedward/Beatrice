@@ -744,7 +744,7 @@ async def farms(ctx):
 
     output = ""
     #Maps networks to their corresponding wban emoji. This part will need to be updated for future networks (will map to bsc emoji by default)
-    emoji_map = {"binance-smart-chain":"<:wbanbsc:835977496389877802>", "fantom":"<:wbanftm:949720720110419999>", "polygon":"<:wbanpoly:884560016928043038>"} 
+    emoji_map = {"binance-smart-chain":"<:wbanbsc:835977496389877802>", "fantom":"<:wbanftm:949720720110419999>", "polygon":"<:wbanpoly:884560016928043038>","ethereum":"<:wbaneth:1037739681401536662>"} 
     for (network,farms) in apiResponse:
         #Get the emoji for this network 
         if network in emoji_map:
@@ -752,10 +752,12 @@ async def farms(ctx):
         else:
             emoji = emoji_map["binance-smart-chain"]
         #Build the output 
-        output += f"\n {emoji} **{str.title(network)}**"
+        output += f"\n{emoji} **{str.title(network)}**"
         output += "\n```"
         for (pair,tvl,apr) in farms: 
-            output += f"{pair}: {apr}% APR (${tvl} TVL) \n"
+            output += f"{pair}: {apr}% APR (${tvl} TVL)\n"
+        if len(farms) == 0:
+            output += f"Issue retrieving farms\n"
         output += "```"
     embed = discord.Embed(colour=discord.Colour.green())
     embed.title = "wBAN Farms"

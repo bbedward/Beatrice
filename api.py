@@ -195,6 +195,14 @@ async def getFODLJSON(username):
                     ret[2] = result
     return ret
 
+
+async def getNetworkFarm(network):
+    """
+    Queries Zapper API for running wban farms on specified network    
+    """
+    resp = await json_get(f"https://api.zapper.fi/v2/apps/banano/positions?network={network}&groupId=farm",headers={'accept': '*/*','Authorization': f'Basic {settings.ZAPPER_API}'})
+    return network,resp
+
 async def getWBANFARM():
     output = [] 
     #Start off by querying the API to find out all networks wban is listed on
@@ -212,12 +220,12 @@ async def getWBANFARM():
 
     #Create a task for each network 
     for network in networks:
-        tasks.append(json_get(f"https://api.zapper.fi/v2/apps/banano/positions?network={network}&groupId=farm",headers={'accept': '*/*','Authorization': f'Basic {settings.ZAPPER_API}'}))
+        tasks.append(getNetworkFarm(network))
     
     while len(tasks):
         done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         for task in done:
-            result = task.result()
+            network,result = task.result()
             #Verify the task worked 
             if result is not None and len(result) > 0:
                 farms = []
@@ -252,5 +260,7 @@ async def getWBANFARM():
                         return None
                 #Add information of this network to output 
                 output.append((network,farms))
-
+            else:
+                #Zapper returned an empty list. Network may still have a farm running though.
+                output.append((network,[]))
     return output 
