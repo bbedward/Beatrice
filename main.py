@@ -744,7 +744,13 @@ async def farms(ctx):
 
     output = ""
     #Maps networks to their corresponding wban emoji. This part will need to be updated for future networks (will map to bsc emoji by default)
-    emoji_map = {"binance-smart-chain":"<:wbanbsc:835977496389877802>", "fantom":"<:wbanftm:949720720110419999>", "polygon":"<:wbanpoly:884560016928043038>","ethereum":"<:wbaneth:1037739681401536662>"} 
+    emoji_map = {
+        "binance-smart-chain":"<:wbanbsc:835977496389877802>", 
+        "fantom":"<:wbanftm:949720720110419999>", 
+        "polygon":"<:wbanpoly:884560016928043038>",
+        "ethereum":"<:wbaneth:1037739681401536662>",
+        "arbitrum":"<:wbanarb:1051565681763688548>"
+    } 
     for (network,farms) in apiResponse:
         #Get the emoji for this network 
         if network in emoji_map:
