@@ -252,9 +252,12 @@ async def getWBANFARM():
                                 except:
                                     tvl = "API Error"
                             try:
-                                apr = round(100 * float(farm["dataProps"]["yearlyROI"]))
+                                apr = round(farm["dataProps"]["apy"],1)
                             except:
-                                apr = "API Error"
+                                try:
+                                    apr = round(100 * float(farm["dataProps"]["yearlyROI"]),1)
+                                except: 
+                                    apr = "API Error"
                             farms.append((token_string,tvl,apr))
                     except:
                         return None
