@@ -26,7 +26,7 @@ data:
     CITIZEN_ROLE=431171347427622913
     TROLL_ROLE=600771737138888792
     # Arrest messages
-    RIGHTS="```You have been arrested by the BRPD for crimes against the Banano Republic. You have the right to remain unripe. Anything you say can and will be used against you in a banano court. You have the right to have an orangutan. If you cannot afford one, one will be appointed to you by the court. Until your orangutan arrives, you will spend your time in #jail, bail is set at 10 BANANO.```"
+    RIGHTS="```You have been arrested by the BRPD for crimes against the Banano Republic. You have the right to remain unripe. Anything you say can and will be used against you in a banano court. You have the right to have an orangutan. If you cannot afford one, you can see one at the zoo. A BRPD official will be with you shortly to discuss your crime.```"
     RELEASE="```You have been released from Jail!```"
     # Citizenship messages
     CITIZENSHIP="```I hereby declare you a Citizen of the Banano Republic, may the Banano gods grant you all things which your heart desires.```"
