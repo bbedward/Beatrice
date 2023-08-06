@@ -200,21 +200,22 @@ async def getNetworkFarm(network):
     """
     Queries Zapper API for running wban farms on specified network    
     """
-    resp = await json_get(f"https://api.zapper.fi/v2/apps/banano/positions?network={network}&groupId=farm",headers={'accept': '*/*','Authorization': f'Basic {settings.ZAPPER_API}'})
+    resp = await json_get(f"https://api.zapper.xyz/v2/apps/banano/positions?network={network}&groupId=farm",headers={'accept': '*/*','Authorization': f'Basic {settings.ZAPPER_API}'})
     return network,resp
 
 async def getWBANFARM():
     output = [] 
     #Start off by querying the API to find out all networks wban is listed on
     #Hopefully this means that if a new network is added there won't be a need to update this 
-    r = await json_get(f"https://api.zapper.fi/v2/apps/banano",headers={'accept': '*/*','Authorization': f'Basic {settings.ZAPPER_API}'})
+    r = await json_get(f"https://api.zapper.xyz/v2/apps/banano",headers={'accept': '*/*','Authorization': f'Basic {settings.ZAPPER_API}'})
     networks = []
     if r is None or 'supportedNetworks' not in r:
         return None    
 
     #Gather all the found networks
     for net in r["supportedNetworks"]:
-        networks.append(net["network"])
+        if net["network"] != "fantom":
+            networks.append(net["network"])
 
     tasks = [] 
 
