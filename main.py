@@ -136,32 +136,32 @@ REMOVEFRIDGE = {
 }
 
 MUTE = {
-   		"CMD"      : "{0}mute or {0}muzzle, takes: user, duration (optional)".format(COMMAND_PREFIX),
+   		"CMD"      : "{0}mute or {0}muzzle, takes: user ID(s) or user mention, duration (optional)".format(COMMAND_PREFIX),
         "INFO"     : "mute @bbedward 60 = mute bbedward for 60 minutes"
 }
 
 UNMUTE = {
-   		"CMD"      : "{0}unmute or {0}unmuzzle, user mention".format(COMMAND_PREFIX),
+   		"CMD"      : "{0}unmute or {0}unmuzzle, user ID(s) or user mention".format(COMMAND_PREFIX),
         "INFO"     : "Unmute mentioned user(s)"
 }
 
 NOIMAGES = {
-   		"CMD"      : "{0}noimages, user mention".format(COMMAND_PREFIX),
+   		"CMD"      : "{0}noimages, user ID(s) or user mention".format(COMMAND_PREFIX),
         "INFO"     : "Stops user posting images"
 }
 
 ALLOWIMAGES = {
-   		"CMD"      : "{0}allowimages, user mention".format(COMMAND_PREFIX),
+   		"CMD"      : "{0}allowimages, user ID(s) or user mention".format(COMMAND_PREFIX),
         "INFO"     : "Allows user to post images"
 }
 
 KICK = {
-        "CMD"       : "{0}kick, takes: user ID(s), reason (optional)".format(COMMAND_PREFIX),
+        "CMD"       : "{0}kick, takes: user ID(s) or user mention, reason (optional)".format(COMMAND_PREFIX),
         "INFO"      : "kick 397868283870707713 303599885800964097 reason='You Suck' = kick user 303599885800964097 and user 397868283870707713"
 }
 
 BAN = {
-        "CMD"       : "{0}ban, takes: user ID(s), reason (optional))".format(COMMAND_PREFIX),
+        "CMD"       : "{0}ban, takes: user ID(s) or user mention, reason (optional))".format(COMMAND_PREFIX),
         "INFO"      : "kick 397868283870707713 303599885800964097 = kick user 303599885800964097 and user 397868283870707713"
 }
 
@@ -610,7 +610,7 @@ async def fodl(ctx, *, username):
     message = ctx.message
     #hard-coding mining channel in here for now. no one else should need this command...
     #could allow this in private message, but don't want to pollute the global with everyones chat id's
-    if message.channel.id != 566268199210057728:  # and not is_private(message.channel):
+    if message.channel.id not in [566268199210057728, 443787679457345536]:  # and not is_private(message.channel):
         return
 
     global last_fodl
@@ -872,13 +872,14 @@ async def removefridge(ctx, id: str):
 async def mute(ctx):
 	message = ctx.message
 	if is_admin(message.author):
-		if len(message.mentions) > 0:
+		targets = get_all_mentions(message)
+		if len(targets) > 0:
 			muzzled = message.guild.get_role(settings.muzzled_role)
 			duration = find_amount(message.content)
 			expiration = None
 			if duration is not None:
 				expiration = datetime.datetime.now() + datetime.timedelta(minutes=float(duration))
-			for member in message.mentions:
+			for member in targets:
 				if not db.silence(member.id, message.guild.id, expiration=expiration):
 					await post_response(message, '<@{0}> is already muzzled', member.id)
 					continue
@@ -893,22 +894,23 @@ async def mute(ctx):
 async def unmute(ctx):
 	message = ctx.message
 	if is_admin(message.author):
-		if len(message.mentions) > 0:
+		targets = get_all_mentions(message)
+		if len(targets) > 0:
 			muzzled = message.guild.get_role(settings.muzzled_role)
-			for member in message.mentions:
+			for member in targets:
 				await member.remove_roles(muzzled)
 				if not db.unsilence(member.id):
 					await post_response(message, '<@{0}> is not muzzled', member.id)
 					continue
 				await post_response(message, '<@{0}> has been unmuzzled', member.id)
-
 @client.command()
 async def arrest(ctx):
 	message = ctx.message
 	if is_admin(message.author):
-		if len(message.mentions) > 0:
+		targets = get_all_mentions(message)
+		if len(targets) > 0:
 			jail = message.guild.get_role(settings.ARREST_ROLE)
-			for member in message.mentions:
+			for member in targets:
 				await member.add_roles(jail)
 				await post_response(message, settings.RIGHTS, mention_id=member.id, channel_id=settings.JAIL_ID)
 			await message.add_reaction('\U0001f694')
@@ -917,10 +919,11 @@ async def arrest(ctx):
 async def release(ctx):
 	message = ctx.message
 	if is_admin(message.author):
-		if len(message.mentions) > 0:
+		targets = get_all_mentions(message)
+		if len(targets) > 0:
 			# Tip unban too
 			jail = message.guild.get_role(settings.ARREST_ROLE)
-			for member in message.mentions:
+			for member in targets:
 				await member.remove_roles(jail)
 				await post_response(message, settings.RELEASE, mention_id=member.id)
 
@@ -928,10 +931,11 @@ async def release(ctx):
 async def troll(ctx):
 	message = ctx.message
 	if is_admin(message.author):
-		if len(message.mentions) > 0:
+		targets = get_all_mentions(message)
+		if len(targets) > 0:
 			troll = message.guild.get_role(settings.TROLL_ROLE)
 			citizenship = message.guild.get_role(settings.CITIZEN_ROLE)
-			for member in message.mentions:
+			for member in targets:
 				await member.add_roles(troll)
 				await member.remove_roles(citizenship)
 				await post_response(message, settings.TROLL, mention_id=member.id)
@@ -940,9 +944,10 @@ async def troll(ctx):
 async def untroll(ctx):
 	message = ctx.message
 	if is_admin(message.author):
-		if len(message.mentions) > 0:
+		targets = get_all_mentions(message)
+		if len(targets) > 0:
 			troll = message.guild.get_role(settings.TROLL_ROLE)
-			for member in message.mentions:
+			for member in targets:
 				await member.remove_roles(troll)
 				await post_response(message, settings.UNTROLL, mention_id=member.id)
 
@@ -950,9 +955,10 @@ async def untroll(ctx):
 async def citizenship(ctx):
 	message = ctx.message
 	if is_admin(message.author):
-		if len(message.mentions) > 0:
+		targets = get_all_mentions(message)
+		if len(targets) > 0:
 			citizenship = message.guild.get_role(settings.CITIZEN_ROLE)
-			for member in message.mentions:
+			for member in targets:
 				await member.add_roles(citizenship)
 				await post_response(message, settings.CITIZENSHIP, mention_id=member.id)
 			await message.add_reaction('\:bananorepublic:429691019538202624')
@@ -961,9 +967,10 @@ async def citizenship(ctx):
 async def deport(ctx):
 	message = ctx.message
 	if is_admin(message.author):
-		if len(message.mentions) > 0:
+		targets = get_all_mentions(message)
+		if len(targets) > 0:
 			citizenship = message.guild.get_role(settings.CITIZEN_ROLE)
-			for member in message.mentions:
+			for member in targets:
 				await member.remove_roles(citizenship)
 				await post_response(message, settings.DEPORT, mention_id=member.id)
 			await message.add_reaction('\U0001F6F3')
@@ -972,9 +979,10 @@ async def deport(ctx):
 async def noimages(ctx):
 	message = ctx.message
 	if is_admin(message.author):
-		if len(message.mentions) > 0:
+		targets = get_all_mentions(message)
+		if len(targets) > 0:
 			imagesperm = message.guild.get_role(settings.IMAGES_ROLE)
-			for member in message.mentions:
+			for member in targets:
 				await member.add_roles(imagesperm)
 			await message.add_reaction('\U0001F485')
 
@@ -982,9 +990,10 @@ async def noimages(ctx):
 async def allowimages(ctx):
 	message = ctx.message
 	if is_admin(message.author):
-		if len(message.mentions) > 0:
+		targets = get_all_mentions(message)
+		if len(targets) > 0:
 			imagesperm = message.guild.get_role(settings.IMAGES_ROLE)
-			for member in message.mentions:
+			for member in targets:
 				await member.remove_roles(imagesperm)
 			await message.add_reaction('\U0001F3A8')
 
@@ -1022,12 +1031,12 @@ async def kick(ctx):
             to_kick.append(kick_id)
         except ValueError:
             pass
+    targets = get_all_mentions(message)
     kicked_users = []
-    for kickee_id in to_kick:
-        member = message.guild.get_member(kickee_id)
-        if member is None or is_admin(member):
+    for member in targets:
+        if is_admin(member):
             continue
-        kicked_users.append(kickee_id)
+        kicked_users.append(member)
         await message.guild.kick(member, reason=reason)
     if len(kicked_users) == 0:
         await message.author.send(f"No users to kick, {len(to_kick)} users are inelligble")
@@ -1044,7 +1053,7 @@ async def kick(ctx):
     # Log in channel
     user_list_str = ""
     for x in kicked_users:
-        user_list_str += f"<@{x}> "
+        user_list_str += f"{x.mention} "
     await logchannel.send(f"<@{message.author.id}> KICKED {len(kicked_users)} users: {user_list_str} reason: {'Not Specified' if not reason else reason}")
 
 @client.command()
@@ -1081,12 +1090,12 @@ async def ban(ctx):
             to_ban.append(banid)
         except ValueError:
             pass
+    targets = get_all_mentions(message)
     banned_users = []
-    for banee_id in to_ban:
-        member = message.guild.get_member(banee_id)
-        if member is None or not is_bannable(member):
+    for member in targets:
+        if is_admin(member):
             continue
-        banned_users.append(banee_id)
+        banned_users.append(member)
         await message.guild.ban(member, reason=reason, delete_message_days=0)
     if len(banned_users) == 0:
         await message.author.send(f"No users to ban, {len(to_ban)} users are inelligble")
@@ -1103,7 +1112,7 @@ async def ban(ctx):
     # Log in channel
     user_list_str = ""
     for x in banned_users:
-        user_list_str += f"<@{x}> "
+        user_list_str += f"{x.mention} "
     await logchannel.send(f"<@{message.author.id}> BANNED {len(banned_users)} users: {user_list_str} reason: {'Not Specified' if not reason else reason}")
 
 @client.command()
@@ -1148,6 +1157,25 @@ def find_amount(input_text):
 		return float(matches[0].strip())
 	else:
 		return None
+
+def get_all_mentions(message):
+	"""Given a message, retrieves all mentioned users by both ID and discord mentions"""
+	mentions = []
+	if len(message.mentions) > 0:
+		mentions = message.mentions
+	if len(message.content) > 0:
+        #Avoid adding any IDs potentially specified in the reason
+		for split_string in ["reason","Reason", "REASON"]:
+			message.content = message.content.split(split_string)[0]
+		message.content = ' '.join(message.content.split('\n'))
+		raw_content = message.content.split(' ')
+		for split in raw_content:
+			try:
+				user_id = int(split.strip())
+				mentions.append(message.guild.get_member(user_id))
+			except ValueError:
+				pass
+	return mentions
 
 # Start the bot
 client.run(settings.discord_bot_token)
