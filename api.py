@@ -214,8 +214,7 @@ async def getWBANFARM():
 
     #Gather all the found networks
     for net in r["supportedNetworks"]:
-        if net["network"] != "fantom":
-            networks.append(net["network"])
+        networks.append(net["network"])
 
     tasks = [] 
 
@@ -235,7 +234,9 @@ async def getWBANFARM():
                     try: 
                         #Get the information on current network 
                         network = farm["network"]
-                        if bool(farm["dataProps"]["isActive"]): #Ensure network is active 
+                        if farm["key"] in ["1470554045", "3793781140"]: # Patch out (by farm-id) Bsc busd-wban and FTM farm as both have ended 
+                            continue
+                        if bool(farm["dataProps"]["isActive"]): #Ensure farm is active, 
                             for tokens in farm["tokens"]: #Recover the token pairs used in the network 
                                 if tokens["metaType"] == "supplied" and tokens["type"] == "app-token" :
                                     tokens_in_farm = []
@@ -263,7 +264,8 @@ async def getWBANFARM():
                     except:
                         return None
                 #Add information of this network to output 
-                output.append((network,farms))
+                if len(farms) > 0:
+                    output.append((network,farms))
             else:
                 #Zapper returned an empty list. Network may still have a farm running though.
                 output.append((network,[]))
