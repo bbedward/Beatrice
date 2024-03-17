@@ -878,7 +878,10 @@ async def mute(ctx):
 			duration = find_amount(message.content)
 			expiration = None
 			if duration is not None:
-				expiration = datetime.datetime.now() + datetime.timedelta(minutes=float(duration))
+				try:
+					expiration = datetime.datetime.now() + datetime.timedelta(minutes=float(duration))
+				except:
+					expiration = None
 			for member in targets:
 				if not db.silence(member.id, message.guild.id, expiration=expiration):
 					await post_response(message, '<@{0}> is already muzzled', member.id)
@@ -1121,7 +1124,7 @@ async def post_response(message, template, *args, mention_id=None, channel_id=No
     if not is_private(message.channel):
         response = "<@" + str(mention_id) + "> \n" + response
     logger.info("sending response: '%s' for message: '%s' to userid: '%s' name: '%s'", response, message.content, message.author.id, message.author.name)
-    asyncio.sleep(0.05) # Slight delay to avoid discord bot responding above commands
+    await asyncio.sleep(0.05) # Slight delay to avoid discord bot responding above commands
     return await channel.send(response)
 
 async def post_usage(message, command):
@@ -1178,15 +1181,19 @@ def get_all_mentions(message):
         for split in raw_content:
             try:
                 user_id = int(split.strip())
-                mentions.append(message.guild.get_member(user_id))
+                member = message.guild.get_member(user_id)
+                if member != None:
+                    mentions.append(member)
             except ValueError:
                 pass
-        #Re-add any wallets that are mentioned in the reason but also in the main text
+        #Re-add any users that are mentioned in the reason but also in the main text
         for split in message.content.split('<@')[1:]:
             if ">" in split:
                 try:
                     user_id = int(split.split(">")[0])
-                    mentions.append(message.guild.get_member(user_id))
+                    member = message.guild.get_member(user_id)
+                    if member != None:
+                        mentions.append(member)
                 except (ValueError, IndexError):
                     pass                 
     return list(set(mentions))
