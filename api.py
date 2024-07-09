@@ -3,6 +3,9 @@ import asyncio
 import json
 import util
 import settings
+import time
+from web3 import Web3
+from web3.eth import AsyncEth
 
 logger = util.get_logger("discord")
 
@@ -196,17 +199,140 @@ async def getFODLJSON(username):
     return ret
 
 
+#RPC endpoints used to fetch contract data
+rpc_endpoints = {
+    'ethereum': 'https://eth.llamarpc.com',
+    'polygon': 'https://polygon-rpc.com/',           
+    'arbitrum': 'https://arb1.arbitrum.io/rpc',
+    'binance-smart-chain': 'https://bsc-dataseed1.binance.org/',
+    'fantom': 'https://rpcapi.fantom.network'
+}
+
+#Block explorer for various networks, used to fetch wban-farms contract ABI
+network_scan = {
+    'ethereum': 'etherscan.com',
+    'polygon': 'polygonscan.com',           
+    'arbitrum': 'arbiscan.io',
+    'binance-smart-chain': 'bscscan.com',
+    'fantom': 'ftmscan.com'
+    
+}
+
+abi = None
+#Fetch contract ABI using API call if not cached. (Cache is cleared on errors)
+async def fetch_contract_abi(network, contract_address):
+    global abi
+    if abi is  None:
+        response = await json_get(f"https://api.{network_scan[network]}/api?module=contract&action=getabi&address={contract_address}")
+        abi = response['result']
+    return abi
+
+
+async def fetch_rewards(network, contract_address, pool_id):
+    global abi
+    contract_address = Web3.to_checksum_address(contract_address)
+    try:
+        contract_abi = json.loads(await fetch_contract_abi(network, contract_address))
+        # Initialize web3 provider
+        w3 = Web3(Web3.AsyncHTTPProvider(rpc_endpoints[network]), modules={'eth': (AsyncEth,)})
+        if (await w3.is_connected()):
+            contract = w3.eth.contract(address=contract_address, abi=contract_abi)
+            try:
+                # Parse contract ABI to find the correct index for allocPoint in poolInfo
+                alloc_point_index = None
+                for entry in contract_abi:
+                    if entry['type'] == 'function' and entry['name'] == 'poolInfo':
+                        for id, input_param in enumerate(entry['outputs']):
+                            if input_param['name'] == 'allocPoint':
+                                alloc_point_index = id
+                                break
+                        if alloc_point_index is not None:
+                            break
+            except Exception as e:
+                print(f"Error fetching contract fields: {e}")
+                alloc_point_index = -1
+            try:
+                pool_info = await contract.functions.poolInfo(int(pool_id)).call()
+                alloc_point = pool_info[alloc_point_index]
+                if alloc_point <= 0:
+                    #Farm not active
+                    return 0
+
+                end_time = await contract.functions.endTime().call()
+                start_time = await contract.functions.startTime().call()
+                if end_time < time.time() or start_time > time.time():
+                    #Farm not active
+                    return 0
+                
+                total_alloc_point = await contract.functions.totalAllocPoint().call()
+                wban_per_second = await contract.functions.wbanPerSecond().call()
+                pool_wban_per_year = wban_per_second  * alloc_point / total_alloc_point * 365 * 24 * 60 * 60  // 10 ** 18
+                return pool_wban_per_year 
+            except Exception:
+                abi = None
+    except Exception:
+        abi = None
+    return -1 
+
+
 async def getNetworkFarm(network):
     """
-    Queries Zapper API for running wban farms on specified network    
+    Queries Zapper API for running wban farms on specified network and then fetch APR for that network.
     """
     resp = await json_get(f"https://api.zapper.xyz/v2/apps/banano/positions?network={network}&groupId=farm",headers={'accept': '*/*','Authorization': f'Basic {settings.ZAPPER_API}'})
-    return network,resp
 
-async def getWBANFARM():
+    #Verify the task worked 
+    if resp is not None and len(resp) > 0:
+        farms = []
+
+        #Go through all the farms for this network 
+        for farm in resp:
+            try: 
+                ban_price = 0
+                liquidity = 0
+                if ":" in farm['key']:
+                    # Networks that have migrated to new Zapper API:
+                    contract, index = farm['key'].split(':')
+                else:
+                    # Networks still on older Zapper API:
+                    contract = farm['address']
+                    index = farm['dataProps']['poolIndex']
+                    if not bool(farm['dataProps']['isActive']):
+                        continue 
+
+                for tokens in farm["tokens"]: #Recover the token pairs used in the network 
+                    if tokens["metaType"] == "supplied" and tokens["type"] == "app-token" :
+                        tokens_in_farm = []
+                        for token in tokens["tokens"]:
+                            tokens_in_farm.append(token["symbol"])
+                            if token["symbol"] == "wBAN":
+                                ban_price = float(token["price"])
+                        if len(tokens_in_farm) > 1 and tokens_in_farm[1] == "wBAN": #Some basic ordering, such that wban comes first 
+                            tokens_in_farm[0],tokens_in_farm[1] = tokens_in_farm[1],tokens_in_farm[0]
+                        liquidity = round(float(tokens['dataProps']['liquidity']))
+                token_string = "-".join(tokens_in_farm) #Get a string representation of the pair 
+
+                #Fetch yearly rewards in ban
+                ban_rewards = await fetch_rewards(network, contract, index)
+                if ban_rewards == -1:
+                    farms.append((token_string, liquidity, "API Error"))
+                if ban_rewards > 0:
+                    apr = round(ban_rewards * 100 * ban_price / liquidity, 1)
+                    farms.append((token_string, liquidity, apr))
+            except Exception:
+                continue
+    else:
+        return network, None
+    return network, farms
+
+
+async def getWbanFarms():
+    """
+    Uses Zapper API to fetch networks with running wban farms.
+    Then use combination of zapper API and onchain contract info to compute APR and TVL.
+    """
     output = [] 
-    #Start off by querying the API to find out all networks wban is listed on
-    #Hopefully this means that if a new network is added there won't be a need to update this 
+    #Start off by querying the API to find out all networks wban is on
     r = await json_get(f"https://api.zapper.xyz/v2/apps/banano",headers={'accept': '*/*','Authorization': f'Basic {settings.ZAPPER_API}'})
     networks = []
     if r is None or 'supportedNetworks' not in r:
@@ -218,55 +344,18 @@ async def getWBANFARM():
 
     tasks = [] 
 
-    #Create a task for each network 
+    #Create a task for each network. This fetches all farms and computes their APRs
     for network in networks:
         tasks.append(getNetworkFarm(network))
     
     while len(tasks):
         done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         for task in done:
-            network,result = task.result()
-            #Verify the task worked 
-            if result is not None and len(result) > 0:
-                farms = []
-                #Go through all the farms for this network 
-                for farm in result:
-                    try: 
-                        #Get the information on current network 
-                        network = farm["network"]
-                        if farm["key"] in ["1470554045", "3793781140"]: # Patch out (by farm-id) Bsc busd-wban and FTM farm as both have ended 
-                            continue
-                        if bool(farm["dataProps"]["isActive"]): #Ensure farm is active, 
-                            for tokens in farm["tokens"]: #Recover the token pairs used in the network 
-                                if tokens["metaType"] == "supplied" and tokens["type"] == "app-token" :
-                                    tokens_in_farm = []
-                                    for token in tokens["tokens"]:
-                                        tokens_in_farm.append(token["symbol"])
-                                    if len(tokens_in_farm) > 1 and tokens_in_farm[1] == "wBAN": #Some basic ordering, such that wban comes first 
-                                        tokens_in_farm[0],tokens_in_farm[1] = tokens_in_farm[1],tokens_in_farm[0]
-                            token_string = "-".join(tokens_in_farm) #Get a string representation of the pair 
-                            #Get TVL and APR, round them 
-                            try: #Naming of these may change, adapt in those cases.
-                                tvl = int(farm["dataProps"]["liquidity"])
-                            except:
-                                try:
-                                    tvl = int(farm["dataProps"]["totalValueLocked"])
-                                except:
-                                    tvl = "API Error"
-                            try:
-                                apr = round(farm["dataProps"]["apy"],1)
-                            except:
-                                try:
-                                    apr = round(100 * float(farm["dataProps"]["yearlyROI"]),1)
-                                except: 
-                                    apr = "API Error"
-                            farms.append((token_string,tvl,apr))
-                    except:
-                        return None
-                #Add information of this network to output 
-                if len(farms) > 0:
-                    output.append((network,farms))
-            else:
+            network, farms = task.result()
+
+            if farms is None:
                 #Zapper returned an empty list. Network may still have a farm running though.
                 output.append((network,[]))
+            elif len(farms) > 0:
+                output.append((network,farms))
     return output 
