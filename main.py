@@ -733,7 +733,7 @@ async def farms(ctx):
 
     last_farms[message.channel.id] = datetime.datetime.now()
     #Get the API response
-    apiResponse = await api.getWBANFARM()
+    apiResponse = await api.getWbanFarms()
     #In case something went wrong 
     if apiResponse == None or apiResponse == []:
         await ctx.send("API Error")
