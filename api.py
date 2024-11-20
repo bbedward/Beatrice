@@ -17,6 +17,7 @@ CG_STATUS_CACHE_KEY = 'beatrice_statuscache'
 CGNANO_URL = 'https://api.coingecko.com/api/v3/coins/nano?localization=false&tickers=true&market_data=true&community_data=false&developer_data=false&sparkline=false'
 CGBTC_URL = 'https://api.coingecko.com/api/v3/coins/bitcoin?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false'
 BANANO_URL = 'https://api.coingecko.com/api/v3/coins/banano?localization=false&tickers=true&market_data=true&community_data=false&developer_data=false&sparkline=false'
+COINEX_BAN_URL = 'https://api.coinex.com/v1/market/ticker?market=BANANOUSDT'
 
 async def json_get(reqUrl,headers=""):
     try:
@@ -32,24 +33,20 @@ async def get_status():
     redis = await util.get_redis()
     response = await redis.get(CG_STATUS_CACHE_KEY)
     if response is None:
-        cg_response = await json_get(BANANO_URL)
-        if cg_response is not None and 'market_data' in cg_response:
-            usd_prices = []
-            sat_prices = []
-            for t in cg_response['tickers']:
-                        if t['target'] == 'USDT' and t['market']['name'] == 'CoinEx':
-                            usd_prices.append(float(t['last']))
-                            sat_prices.append(float(t['converted_last']['btc']*100000000))
-            usdprice = sum(usd_prices) / len(usd_prices)
-            satprice = sum(sat_prices) / len(sat_prices)
-            ret = {
-                "satoshi": satprice,
-                "usdprice": usdprice
-            }
-            await redis.set(CG_STATUS_CACHE_KEY, json.dumps(ret), expire=300) # Cache result for 5 minutes
-            return ret
-        else:
-            return None
+        usdprice = await get_coinex_price()
+        if usdprice is not None:
+            # Get BTC price for satoshi calculation
+            btc_response = await get_btc_usd()
+            if btc_response is not None:
+                btc_price = btc_response[1]['usdprice']
+                satprice = (usdprice / btc_price) * 100000000
+                ret = {
+                    "satoshi": satprice,
+                    "usdprice": usdprice
+                }
+                await redis.set(CG_STATUS_CACHE_KEY, json.dumps(ret), expire=300)
+                return ret
+        return None
     else:
         return json.loads(response)
 
@@ -65,14 +62,13 @@ async def get_banano_price():
     if response is not None and 'market_data' in response:
         # Get price and volume
         banpernan = float(response['market_data']['market_cap']['btc']) / float(await redis.get("nano-btc-price"))
-        usd_prices = []
-        sat_prices = []
-        for t in response['tickers']:
-                    if t['target'] == 'USDT' and t['market']['name'] == 'CoinEx':
-                        usd_prices.append(float(t['last']))
-                        sat_prices.append(float(t['converted_last']['btc']*100000000))
-        usdprice = sum(usd_prices) / len(usd_prices)
-        satprice = sum(sat_prices) / len(sat_prices)
+        usdprice = await get_coinex_price()
+        if usdprice is None:
+            return None
+        btc_response = await get_btc_usd()
+        if btc_response is None:
+            return None
+        satprice = (usdprice / btc_response[1]['usdprice']) * 100000000
         volumebtc = float(response["market_data"]["total_volume"]["btc"])
         # Other data
         circ_supply = float(response['market_data']['circulating_supply'])
@@ -97,6 +93,17 @@ async def get_banano_price():
         return ("BANANO", ret)
     else:
         return None
+
+async def get_coinex_price():
+    """Get Banano price directly from CoinEx API"""
+    try:
+        response = await json_get(COINEX_BAN_URL)
+        if response is not None and response['code'] == 0:
+            ticker = response['data']['ticker']
+            return float(ticker['last'])
+    except (KeyError, ValueError):
+        return None
+    return None
 
 async def get_nano_price():
     redis = await util.get_redis()
