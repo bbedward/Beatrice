@@ -58,7 +58,6 @@ async def get_banano_price():
         response = json.loads(response)
     if response is not None and 'market_data' in response:
         # Get price and volume
-        banpernan = float(response['market_data']['market_cap']['btc']) / float(await redis.get("nano-btc-price"))
         usdprice = float(response['market_data']['current_price']['usd'])
         satprice = float(response['market_data']['current_price']['btc']) * 100000000
         volumebtc = float(response["market_data"]["total_volume"]["btc"])
@@ -67,7 +66,6 @@ async def get_banano_price():
         rank = response['market_cap_rank']
         mcap = float(response['market_data']['market_cap']['usd'])
         ret = {
-            "xrb":banpernan,
             "satoshi":satprice,
             "volume":volumebtc,
             "supply":circ_supply,
@@ -96,25 +94,16 @@ async def get_nano_price():
     else:
         response = json.loads(response)
     if response is not None and 'market_data' in response:
-        # Cache nano-btc price
-        await redis.set("nano-btc-price", f"{response['market_data']['market_cap']['btc']:.16f}")
         # Get price and volume
-        volumebtc = float(response["market_data"]["total_volume"]["btc"])
-        kucoinprice = 0
-        binanceprice = 0
-        for t in response['tickers']:
-            if t['market']['identifier'] == 'kucoin' and t['target'] == 'BTC':
-                kucoinprice = float(t['last'])
-            elif t['market']['identifier'] == 'binance' and t['target'] == 'BTC':
-                binanceprice = float(t['last'])
         usdprice = float(response["market_data"]["current_price"]["usd"])
+        btcprice = float(response["market_data"]["current_price"]["btc"])
+        volumebtc = float(response["market_data"]["total_volume"]["btc"])
         # Other data
         circ_supply = float(response['market_data']['circulating_supply'])
         rank = response['market_cap_rank']
         mcap = float(response['market_data']['market_cap']['usd'])
         ret = {
-            "kucoin":kucoinprice,
-            "binance":binanceprice,
+            "btcprice":btcprice,
             "volume":volumebtc,
             "supply":circ_supply,
             "rank": rank,
