@@ -353,10 +353,12 @@ async def price(ctx):
             embed.colour=discord.Colour.red()
         embed.description += "```"
         embed.description += f"Rank            : #{banano['rank']}\n"
-        embed.description += f"Price  (NANO)   : {banano['xrb']:.6f} NANO\n"
+        if nano is not None:
+            ban_in_nano = banano['usdprice'] / nano['usdprice']
+            banpernan = 1 / ban_in_nano
+            embed.description += f"Price  (NANO)   : {ban_in_nano:.6f} NANO\n"
         embed.description += f"Price  (BTC)    : {banano['satoshi']:.1f} sats\n"
         embed.description += f"Price  (USD)    : ${banano['usdprice']:.6f}\n"
-        banpernan = 1/banano['xrb']
         if settings.VESPRICE and 'bolivar' in banano:
             embed.description += f"Price  (VES)    : {banano['bolivar']:.2f} Bs.S\n"
         embed.description += f"Volume (24H)    : {banano['volume']:,.2f} BTC\n"
@@ -369,8 +371,7 @@ async def price(ctx):
         banpernan = nano['usdprice'] / banano['usdprice']
         embed.description += "```"
         embed.description += f"Rank            : #{nano['rank']}\n"
-        embed.description += f"Price  (Kucoin) : {nano['kucoin']:.8f} BTC\n"
-        embed.description += f"Price  (Binance): {nano['binance']:.8f} BTC\n"
+        embed.description += f"Price  (BTC)    : {nano['btcprice']:.8f} BTC\n"
         embed.description += f"Price  (USD)    : ${nano['usdprice']:.2f}\n"
         if settings.VESPRICE and 'bolivar' in nano:
             embed.description += f"Price  (VES)    : {nano['bolivar']:.2f} Bs.S\n"
