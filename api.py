@@ -34,14 +34,8 @@ async def get_status():
     if response is None:
         cg_response = await json_get(BANANO_URL)
         if cg_response is not None and 'market_data' in cg_response:
-            usd_prices = []
-            sat_prices = []
-            for t in cg_response['tickers']:
-                        if t['target'] == 'USDT' and t['market']['name'] == 'CoinEx':
-                            usd_prices.append(float(t['last']))
-                            sat_prices.append(float(t['converted_last']['btc']*100000000))
-            usdprice = sum(usd_prices) / len(usd_prices)
-            satprice = sum(sat_prices) / len(sat_prices)
+            usdprice = float(cg_response['market_data']['current_price']['usd'])
+            satprice = float(cg_response['market_data']['current_price']['btc']) * 100000000
             ret = {
                 "satoshi": satprice,
                 "usdprice": usdprice
@@ -65,14 +59,8 @@ async def get_banano_price():
     if response is not None and 'market_data' in response:
         # Get price and volume
         banpernan = float(response['market_data']['market_cap']['btc']) / float(await redis.get("nano-btc-price"))
-        usd_prices = []
-        sat_prices = []
-        for t in response['tickers']:
-                    if t['target'] == 'USDT' and t['market']['name'] == 'CoinEx':
-                        usd_prices.append(float(t['last']))
-                        sat_prices.append(float(t['converted_last']['btc']*100000000))
-        usdprice = sum(usd_prices) / len(usd_prices)
-        satprice = sum(sat_prices) / len(sat_prices)
+        usdprice = float(response['market_data']['current_price']['usd'])
+        satprice = float(response['market_data']['current_price']['btc']) * 100000000
         volumebtc = float(response["market_data"]["total_volume"]["btc"])
         # Other data
         circ_supply = float(response['market_data']['circulating_supply'])
