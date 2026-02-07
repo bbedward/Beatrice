@@ -378,8 +378,10 @@ async def price(ctx):
         embed.description += f"Volume (24H)    : {nano['volume']:,.2f} BTC\n"
         embed.description += f"Market Cap      : ${int(nano['mcap']):,}\n"
         embed.description += "```"
-    if btc is not None:
+    if btc is not None and banpernan != "":
         embed.set_footer(text='1 BTC = ${0:,.2f} | 1 NANO = {1:,.2f} BAN | Market Data Provided by CoinGecko.com'.format(btc['usdprice'], banpernan))
+    elif btc is not None:
+        embed.set_footer(text='1 BTC = ${0:,.2f} | Market Data Provided by CoinGecko.com'.format(btc['usdprice']))
     await msg.edit(content="", embed=embed)
 
 @client.command()
