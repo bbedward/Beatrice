@@ -734,9 +734,12 @@ async def farms(ctx):
     last_farms[message.channel.id] = datetime.datetime.now()
     #Get the API response
     apiResponse = await api.getWbanFarms()
-    #In case something went wrong 
-    if apiResponse == None or apiResponse == []:
+    #In case something went wrong
+    if apiResponse is None:
         await ctx.send("API Error")
+        return
+    if apiResponse == []:
+        await ctx.send("No active wBAN farms found")
         return
         
     #Sort the response so that the networks are always in the same order
@@ -760,10 +763,13 @@ async def farms(ctx):
         #Build the output 
         output += f"\n{emoji} **{str.title(network)}**"
         output += "\n```"
-        for (pair,tvl,apr) in farms: 
-            output += f"{pair}: {apr}% APR (${tvl} TVL)\n"
+        for (pair,tvl,apr) in farms:
+            if apr is not None:
+                output += f"{pair}: {apr}% APR (${tvl:,} TVL)\n"
+            else:
+                output += f"{pair}: Inactive (${tvl:,} TVL)\n"
         if len(farms) == 0:
-            output += f"Issue retrieving farms\n"
+            output += f"No pools found\n"
         output += "```"
     embed = discord.Embed(colour=discord.Colour.green())
     embed.title = "wBAN Farms"
