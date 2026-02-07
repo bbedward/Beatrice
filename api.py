@@ -203,8 +203,94 @@ network_scan = {
     'arbitrum': 'arbiscan.io',
     'binance-smart-chain': 'bscscan.com',
     'fantom': 'ftmscan.com'
-    
+
 }
+
+# wBAN token address (same across all chains)
+WBAN_ADDRESS = '0xe20B9e246db5a0d21BF9209E4858Bc9A3ff7A034'
+
+# Hardcoded farm configs sourced from wban-dApp repo
+FARM_CONFIGS = {
+    'binance-smart-chain': {
+        'benis': '0x1E30E12e82956540bf870A40FD1215fC083a3751',
+        'pools': [
+            {'pid': 0, 'lp': WBAN_ADDRESS, 'pair': 'wBAN'},
+            {'pid': 1, 'lp': '0x6011c6BAe36F2a2457dC69Dc49068a1E8Ad832DD', 'pair': 'wBAN-BNB'},
+            {'pid': 2, 'lp': '0x7898466CACf92dF4a4e77a3b4d0170960E43b896', 'pair': 'wBAN-BUSD'},
+            {'pid': 3, 'lp': '0x351A295AfBAB020Bc7eedcB7fd5A823c01A95Fda', 'pair': 'wBAN-BUSD'},
+            {'pid': 4, 'lp': '0x76B1aB2f84bE3C4a103ef1d2C2a74145414FFA49', 'pair': 'wBAN-USDC'},
+        ]
+    },
+    'polygon': {
+        'benis': '0xefa4aED9Cf41A8A0FcdA4e88EfA2F60675bAeC9F',
+        'pools': [
+            {'pid': 0, 'lp': '0xb556feD3B348634a9A010374C406824Ae93F0CF8', 'pair': 'wBAN-WETH'},
+        ]
+    },
+    'fantom': {
+        'benis': '0xD91f84D4E2d9f4fa508c61356A6CB81a306e5287',
+        'pools': [
+            {'pid': 0, 'lp': '0x6bADcf8184a760326528b11057C00952811f77af', 'pair': 'wBAN-USDC'},
+            {'pid': 1, 'lp': '0x1406E49b5B0dA255307FE25cC21C675D4Ffc73e0', 'pair': 'wBAN-FTM'},
+        ]
+    },
+    'ethereum': {
+        'benis': '0xD91f84D4E2d9f4fa508c61356A6CB81a306e5287',
+        'pools': [
+            {'pid': 0, 'lp': '0x1f249F8b5a42aa78cc8a2b66EE0bb015468a5f43', 'pair': 'wBAN-ETH'},
+        ]
+    },
+    'arbitrum': {
+        'benis': '0x8cd4DED2b49736B1a1Dbe18B9EB4BA6b6BF28227',
+        'pools': [
+            {'pid': 0, 'lp': '0xBD80923830B1B122dcE0C446b704621458329F1D', 'pair': 'wBAN-ETH'},
+        ]
+    },
+}
+
+# Minimal ABIs for LP token queries
+ERC20_ABI = [{"constant":True,"inputs":[{"name":"account","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"type":"function"}]
+
+PAIR_ABI = [
+    {"constant":True,"inputs":[{"name":"account","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"type":"function"},
+    {"constant":True,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"type":"function"},
+    {"constant":True,"inputs":[],"name":"getReserves","outputs":[{"name":"reserve0","type":"uint112"},{"name":"reserve1","type":"uint112"},{"name":"blockTimestampLast","type":"uint32"}],"type":"function"},
+    {"constant":True,"inputs":[],"name":"token0","outputs":[{"name":"","type":"address"}],"type":"function"},
+]
+
+async def get_pool_tvl(network, benis_address, lp_address, wban_price):
+    """Calculate TVL for a farm pool using on-chain data."""
+    try:
+        w3 = Web3(Web3.AsyncHTTPProvider(rpc_endpoints[network]), modules={'eth': (AsyncEth,)})
+        benis_address = Web3.to_checksum_address(benis_address)
+        lp_address = Web3.to_checksum_address(lp_address)
+
+        if lp_address.lower() == WBAN_ADDRESS.lower():
+            # Single-staking pool: TVL = wBAN balance of benis * price
+            token = w3.eth.contract(address=lp_address, abi=ERC20_ABI)
+            balance = await token.functions.balanceOf(benis_address).call()
+            return balance * wban_price / 1e18
+        else:
+            # LP pair pool
+            lp = w3.eth.contract(address=lp_address, abi=PAIR_ABI)
+            staked = await lp.functions.balanceOf(benis_address).call()
+            if staked <= 0:
+                return 0
+            total_supply = await lp.functions.totalSupply().call()
+            reserves = await lp.functions.getReserves().call()
+            token0 = await lp.functions.token0().call()
+
+            # Identify which reserve is wBAN
+            if token0.lower() == WBAN_ADDRESS.lower():
+                wban_reserve = reserves[0]
+            else:
+                wban_reserve = reserves[1]
+
+            # TVL = (staked/totalSupply) * 2 * wban_reserve * price / 1e18
+            return (staked / total_supply) * 2 * wban_reserve * wban_price / 1e18
+    except Exception as e:
+        logger.error(f"Error fetching TVL for {network} {lp_address}: {e}")
+        return -1
 
 abi = None
 #Fetch contract ABI using API call if not cached. (Cache is cleared on errors)
@@ -263,87 +349,60 @@ async def fetch_rewards(network, contract_address, pool_id):
     return -1 
 
 
-async def getNetworkFarm(network):
+async def getNetworkFarm(network, wban_price):
     """
-    Queries Zapper API for running wban farms on specified network and then fetch APR for that network.
+    Queries on-chain contracts for running wban farms on specified network and computes APR and TVL.
     """
-    resp = await json_get(f"https://api.zapper.xyz/v2/apps/banano/positions?network={network}&groupId=farm",headers={'accept': '*/*','Authorization': f'Basic {settings.ZAPPER_API}'})
-
-    #Verify the task worked 
-    if resp is not None and len(resp) > 0:
-        farms = []
-
-        #Go through all the farms for this network 
-        for farm in resp:
-            try: 
-                ban_price = 0
-                liquidity = 0
-                if ":" in farm['key']:
-                    # Networks that have migrated to new Zapper API:
-                    contract, index = farm['key'].split(':')
-                else:
-                    # Networks still on older Zapper API:
-                    contract = farm['address']
-                    index = farm['dataProps']['poolIndex']
-                    if not bool(farm['dataProps']['isActive']):
-                        continue 
-
-                for tokens in farm["tokens"]: #Recover the token pairs used in the network 
-                    if tokens["metaType"] == "supplied" and tokens["type"] == "app-token" :
-                        tokens_in_farm = []
-                        for token in tokens["tokens"]:
-                            tokens_in_farm.append(token["symbol"])
-                            if token["symbol"] == "wBAN":
-                                ban_price = float(token["price"])
-                        if len(tokens_in_farm) > 1 and tokens_in_farm[1] == "wBAN": #Some basic ordering, such that wban comes first 
-                            tokens_in_farm[0],tokens_in_farm[1] = tokens_in_farm[1],tokens_in_farm[0]
-                        liquidity = round(float(tokens['dataProps']['liquidity']))
-                token_string = "-".join(tokens_in_farm) #Get a string representation of the pair 
-
-                #Fetch yearly rewards in ban
-                ban_rewards = await fetch_rewards(network, contract, index)
-                if ban_rewards == -1:
-                    farms.append((token_string, liquidity, "API Error"))
-                if ban_rewards > 0:
-                    apr = round(ban_rewards * 100 * ban_price / liquidity, 1)
-                    farms.append((token_string, liquidity, apr))
-            except Exception:
-                continue
-    else:
+    if network not in FARM_CONFIGS:
         return network, None
+
+    config = FARM_CONFIGS[network]
+    benis = config['benis']
+    farms = []
+
+    for pool in config['pools']:
+        try:
+            tvl = await get_pool_tvl(network, benis, pool['lp'], wban_price)
+            if tvl <= 0:
+                continue
+
+            ban_rewards = await fetch_rewards(network, benis, pool['pid'])
+            if ban_rewards > 0:
+                apr = round(ban_rewards * wban_price / tvl * 100, 1)
+            else:
+                apr = None
+
+            farms.append((pool['pair'], round(tvl), apr))
+        except Exception as e:
+            logger.error(f"Error processing pool {pool['pair']} on {network}: {e}")
+            continue
+
     return network, farms
 
 
 async def getWbanFarms():
     """
-    Uses Zapper API to fetch networks with running wban farms.
-    Then use combination of zapper API and onchain contract info to compute APR and TVL.
+    Fetches wBAN price from CoinGecko, then queries on-chain contracts for all networks
+    to compute APR and TVL for each farm pool.
     """
-    output = [] 
-    #Start off by querying the API to find out all networks wban is on
-    r = await json_get(f"https://api.zapper.xyz/v2/apps/banano",headers={'accept': '*/*','Authorization': f'Basic {settings.ZAPPER_API}'})
-    networks = []
-    if r is None or 'supportedNetworks' not in r:
-        return None    
+    # Fetch wBAN price
+    cg_response = await json_get(BANANO_URL)
+    if cg_response is None or 'market_data' not in cg_response:
+        return None
+    wban_price = float(cg_response['market_data']['current_price']['usd'])
 
-    #Gather all the found networks
-    for net in r["supportedNetworks"]:
-        networks.append(net["network"])
+    output = []
+    tasks = []
 
-    tasks = [] 
+    for network in FARM_CONFIGS:
+        tasks.append(getNetworkFarm(network, wban_price))
 
-    #Create a task for each network. This fetches all farms and computes their APRs
-    for network in networks:
-        tasks.append(getNetworkFarm(network))
-    
     while len(tasks):
         done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         for task in done:
             network, farms = task.result()
-
             if farms is None:
-                #Zapper returned an empty list. Network may still have a farm running though.
-                output.append((network,[]))
+                output.append((network, []))
             elif len(farms) > 0:
-                output.append((network,farms))
-    return output 
+                output.append((network, farms))
+    return output
