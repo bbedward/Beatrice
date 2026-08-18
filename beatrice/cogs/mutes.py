@@ -27,7 +27,6 @@ class Mutes(commands.Cog):
 
     @app_commands.command(description="Muzzle a user, optionally for a duration in minutes")
     @app_commands.guild_only()
-    @app_commands.default_permissions(moderate_members=True)
     @admin_only()
     async def mute(
         self,
@@ -57,7 +56,6 @@ class Mutes(commands.Cog):
 
     @app_commands.command(description="Unmuzzle a user")
     @app_commands.guild_only()
-    @app_commands.default_permissions(moderate_members=True)
     @admin_only()
     async def unmute(self, interaction: discord.Interaction, user: discord.Member) -> None:
         role = interaction.guild.get_role(self.bot.settings.muzzled_role_id)

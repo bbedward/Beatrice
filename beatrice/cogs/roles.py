@@ -18,7 +18,6 @@ class Roles(commands.Cog):
 
     @app_commands.command(description="Arrest a user")
     @app_commands.guild_only()
-    @app_commands.default_permissions(manage_roles=True)
     @admin_only()
     async def arrest(self, interaction: discord.Interaction, user: discord.Member) -> None:
         settings = self.bot.settings
@@ -34,7 +33,6 @@ class Roles(commands.Cog):
 
     @app_commands.command(description="Release a user from jail")
     @app_commands.guild_only()
-    @app_commands.default_permissions(manage_roles=True)
     @admin_only()
     async def release(self, interaction: discord.Interaction, user: discord.Member) -> None:
         settings = self.bot.settings
@@ -47,7 +45,6 @@ class Roles(commands.Cog):
 
     @app_commands.command(description="Mark a user as a troll")
     @app_commands.guild_only()
-    @app_commands.default_permissions(manage_roles=True)
     @admin_only()
     async def troll(self, interaction: discord.Interaction, user: discord.Member) -> None:
         settings = self.bot.settings
@@ -62,7 +59,6 @@ class Roles(commands.Cog):
 
     @app_commands.command(description="Remove the troll mark from a user")
     @app_commands.guild_only()
-    @app_commands.default_permissions(manage_roles=True)
     @admin_only()
     async def untroll(self, interaction: discord.Interaction, user: discord.Member) -> None:
         settings = self.bot.settings
@@ -75,7 +71,6 @@ class Roles(commands.Cog):
 
     @app_commands.command(description="Grant citizenship to a user")
     @app_commands.guild_only()
-    @app_commands.default_permissions(manage_roles=True)
     @admin_only()
     async def citizenship(self, interaction: discord.Interaction, user: discord.Member) -> None:
         settings = self.bot.settings
@@ -88,7 +83,6 @@ class Roles(commands.Cog):
 
     @app_commands.command(description="Revoke a user's citizenship")
     @app_commands.guild_only()
-    @app_commands.default_permissions(manage_roles=True)
     @admin_only()
     async def deport(self, interaction: discord.Interaction, user: discord.Member) -> None:
         settings = self.bot.settings
@@ -103,7 +97,6 @@ class Roles(commands.Cog):
         name="images",
         description="Control a user's image posting permission",
         guild_only=True,
-        default_permissions=discord.Permissions(manage_roles=True),
     )
 
     @images.command(name="deny", description="Stop a user posting images")

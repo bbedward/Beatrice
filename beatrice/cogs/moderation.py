@@ -63,7 +63,6 @@ class Moderation(commands.Cog):
 
     @app_commands.command(description="Kick a user, optionally more by ID or mention")
     @app_commands.guild_only()
-    @app_commands.default_permissions(kick_members=True)
     @admin_only()
     async def kick(
         self,
@@ -108,7 +107,6 @@ class Moderation(commands.Cog):
 
     @app_commands.command(description="Ban a user, optionally more by ID or mention")
     @app_commands.guild_only()
-    @app_commands.default_permissions(ban_members=True)
     @admin_only()
     async def ban(
         self,
