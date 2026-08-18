@@ -3,69 +3,62 @@ name: CI
 on:
   push:
     branches: [ master ]
+  pull_request:
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Sync dependencies
+        run: uv sync --frozen
+      - name: Ruff check
+        run: uv run ruff check .
+      - name: Ruff format check
+        run: uv run ruff format --check .
+      - name: Compile
+        run: uv run python -m compileall beatrice scripts
+
   build_and_publish:
     name: Build and Publish Docker Image
+    needs: lint
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    env:
-      GITHUB_RUN_ID: ${{ github.run_id }}    
     steps:
-      - uses: actions/checkout@master   
-      - name: Login to registry
-        uses: actions-hub/docker/login@master
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USER }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Get branch name (merge)
-        if: github.event_name != 'pull_request'
+      - uses: actions/checkout@v4
+      - name: Get branch name
         shell: bash
         run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | tr / -)" >> $GITHUB_ENV
-
-      - name: Get branch name (pull request)
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: echo "BRANCH_NAME=$(echo ${GITHUB_HEAD_REF} | tr / -)" >> $GITHUB_ENV
-
-      - name: Build and tag
-        if: success()
-        run: docker build -t bananocoin/beatrice:${{ env.BRANCH_NAME }}-${{ env.GITHUB_RUN_ID }} .
-
-      - name: Push image   
-        if: success()
-        uses: actions-hub/docker@master
+      - name: Login to registry
+        uses: docker/login-action@v3
         with:
-          args: push bananocoin/beatrice:${{ env.BRANCH_NAME }}-${{ env.GITHUB_RUN_ID }}
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: bananocoin/beatrice:${{ env.BRANCH_NAME }}-${{ github.run_id }}
 
   deploy_bot:
     name: Deploy bot
     needs: build_and_publish
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    env:
-      GITHUB_RUN_ID: ${{ github.run_id }}
     steps:
-      - uses: actions/checkout@master   
-      - uses: imranismail/setup-kustomize@v1
-        with:
-          kustomize-version: "3.5.4"
-
-      - name: Get branch name (merge)
-        if: github.event_name != 'pull_request'
+      - uses: actions/checkout@v4
+      - uses: imranismail/setup-kustomize@v2
+      - name: Get branch name
         shell: bash
         run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | tr / -)" >> $GITHUB_ENV
-
-      - name: Get branch name (pull request)
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: echo "BRANCH_NAME=$(echo ${GITHUB_HEAD_REF} | tr / -)" >> $GITHUB_ENV
-
       - name: Set image
         working-directory: ./kubernetes
         run: |
-          kustomize edit set image replaceme=bananocoin/beatrice:${{ env.BRANCH_NAME }}-${{ env.GITHUB_RUN_ID }}
+          kustomize edit set image replaceme=bananocoin/beatrice:${{ env.BRANCH_NAME }}-${{ github.run_id }}
           kustomize build . > deployment-k.yaml
-
       - name: Deploy image to k8s cluster
         uses: bbedward/kubectl@master
         env:

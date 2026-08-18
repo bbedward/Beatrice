@@ -1,34 +1,45 @@
-# Beatrice (a discord bot)
+# Beatrice
 
-Beatrice is an open source, free to use discord bot.
+BANANO/NANO community utility and moderation bot for Discord.
 
-Features of this bot:
+Slash-command bot built on discord.py 2.x. Runs with **zero privileged intents** — no message
+content, no members, no presence.
 
-- Commands to add and view memes and pups
-- Command to view NANO prices
-- Anti-spam built-in and some other nice stuff
+## Features
 
-## System Requirements
+- `/price` — BANANO/NANO/BTC market data from CoinGecko
+- `/meme` `/pup` `/meow` `/fridge` — curated image rotations, managed via `/gallery add|remove|list`
+- `/farms` — wBAN farm TVL/APR from on-chain queries across five networks
+- `/fodl` — Folding@Home / Bananominer client verification
+- `/mute` `/unmute` — role-based mutes persisted in SQLite; a background sweep expires timed
+  mutes and re-applies the role to users who rejoin to evade it
+- `/kick` `/ban` — moderation with audit-log reasons, multi-target via the `more` option,
+  and rate alerting through redis counters
+- `/arrest` `/release` `/troll` `/untroll` `/citizenship` `/deport` `/images allow|deny`
 
-- SQLite
-- Python 3.5+
+## Requirements
 
-## Python Requirements
+- Python 3.13+
+- Redis
+- [uv](https://docs.astral.sh/uv/)
 
+## Running
 
 ```
-pip3 install -r requirements.txt
+cp .env.example .env   # fill in BOT_TOKEN and your guild's IDs
+uv sync
+set -a; source .env; set +a
+uv run python -m beatrice
 ```
 
-## Usage
+Command trees are synced per-guild on startup, so slash commands appear immediately in every
+server the bot is in.
+
+## Development
 
 ```
-cp settings.py.example settings.py
+uv run ruff check .
+uv run ruff format .
 ```
 
-Then edit settings.py with bot ID and token.
-
-Run with:
-```
-python3 main.py
-```
+Deployment is Docker + kustomize; see `Dockerfile` and `kubernetes/`.

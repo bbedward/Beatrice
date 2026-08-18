@@ -12,8 +12,7 @@ spec:
           containers:
           - name: beatrice
             image: replaceme
-            command: ["/bin/bash", "-c"]
-            args: ["python vesprice.py"]
+            command: ["python", "scripts/vesprice.py"]
             env:
               - name: REDIS_HOST
                 value: redis.redis

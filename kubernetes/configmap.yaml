@@ -3,40 +3,23 @@ kind: ConfigMap
 metadata:
   name: beatrice
 data:
-  settings.py: |
-    import os
-    # Discord
-    discord_bot_token = os.getenv('BOT_TOKEN')
-    # Restricted roles for certain commands
-    admin_roles = [431126363261370392, 416789711034777600, 840979414299967518, 557648182872375318, 430732639130091541]
-    # Admin User IDs
-    admin_ids=['303599885800964097','85280688571416576']
-    # Set channels here to exclude from from like !meme and !pup
-    no_spam_channels=[403628311965597697, 447447880983117824, 431388013256245258, 416306464970506240, 428624456362098698]
-    # command prefix
-    command_prefix='!'
-    # Status
-    playing_status=command_prefix + 'commandlist'
-    # Role for mute/muzzle
-    muzzled_role=439465076525760512
-    # Role for image permissions
-    IMAGES_ROLE=653279161523241010
-    # Banano-discord
-    ARREST_ROLE=428615122336874496
-    CITIZEN_ROLE=431171347427622913
-    TROLL_ROLE=600771737138888792
-    # Arrest messages
-    RIGHTS="```You have been arrested by the BRPD for crimes against the Banano Republic. You have the right to remain unripe. Anything you say can and will be used against you in a banano court. You have the right to have an orangutan. If you cannot afford one, you can see one at the zoo. A BRPD official will be with you shortly to discuss your crime.```"
-    RELEASE="```You have been released from Jail!```"
-    # Citizenship messages
-    CITIZENSHIP="```I hereby declare you a Citizen of the Banano Republic, may the Banano gods grant you all things which your heart desires.```"
-    DEPORT="```I hereby withdraw your Citizenship to the Banano Republic, we don’t want to talk to you no more, you empty-headed animal-food-trough wiper. We fart in your general direction. Your mother was a hamster, and your father smelt of elderberries.```"
-    # Troll messages
-    TROLL="```You have been marked as a TROLL and are no longer a Citizen in the Banano Republic```"
-    UNTROLL="```You are no longer known as a TROLL in the Banano Republic, please reapply for Citizenship.```"
-    VESPRICE=True
-    KICK_LOG=633355505556783104
-    # Jail channel id (For sending messages to recently jailed people, who may not be able to see the channel they were just jailed in)
-    JAIL_ID=416306504124071938
-    #zapper api key for wban farms. https://studio.zapper.fi/docs/apis/endpoints-api-keys
-    ZAPPER_API = os.getenv('ZAPPER_API_KEY') 
+  ADMIN_ROLE_IDS: "431126363261370392,416789711034777600,840979414299967518,557648182872375318,430732639130091541"
+  ADMIN_USER_IDS: "303599885800964097,85280688571416576"
+  SUPER_USER_IDS: "303599885800964097"
+  ALERT_USER_ID: "303599885800964097"
+  NO_SPAM_CHANNEL_IDS: "403628311965597697,447447880983117824,431388013256245258,416306464970506240,428624456362098698"
+  MUZZLED_ROLE_ID: "439465076525760512"
+  IMAGES_ROLE_ID: "653279161523241010"
+  ARREST_ROLE_ID: "428615122336874496"
+  CITIZEN_ROLE_ID: "431171347427622913"
+  TROLL_ROLE_ID: "600771737138888792"
+  KICK_LOG_CHANNEL_ID: "633355505556783104"
+  JAIL_CHANNEL_ID: "416306504124071938"
+  REACTION_PURGE_CHANNEL_ID: "585626036574748684"
+  VES_PRICE_ENABLED: "true"
+  MSG_RIGHTS: "```You have been arrested by the BRPD for crimes against the Banano Republic. You have the right to remain unripe. Anything you say can and will be used against you in a banano court. You have the right to have an orangutan. If you cannot afford one, you can see one at the zoo. A BRPD official will be with you shortly to discuss your crime.```"
+  MSG_RELEASE: "```You have been released from Jail!```"
+  MSG_CITIZENSHIP: "```I hereby declare you a Citizen of the Banano Republic, may the Banano gods grant you all things which your heart desires.```"
+  MSG_DEPORT: "```I hereby withdraw your Citizenship to the Banano Republic, we don’t want to talk to you no more, you empty-headed animal-food-trough wiper. We fart in your general direction. Your mother was a hamster, and your father smelt of elderberries.```"
+  MSG_TROLL: "```You have been marked as a TROLL and are no longer a Citizen in the Banano Republic```"
+  MSG_UNTROLL: "```You are no longer known as a TROLL in the Banano Republic, please reapply for Citizenship.```"

@@ -1,0 +1,12 @@
+.git
+.github
+kubernetes
+venv
+.venv
+__pycache__
+*.pyc
+*.db
+*.db-wal
+*.db-shm
+.env
+debug.log

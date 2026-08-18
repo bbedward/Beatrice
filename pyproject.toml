@@ -1,0 +1,29 @@
+[project]
+name = "beatrice"
+version = "2.0.0"
+description = "BANANO/NANO community utility and moderation bot"
+requires-python = ">=3.13"
+license = { text = "MIT" }
+dependencies = [
+    "discord.py>=2.6,<3",
+    "redis>=6,<7",
+    "aiohttp>=3.11,<4",
+    "web3>=7,<8",
+    "peewee>=3.18,<4",
+    "requests>=2.32,<3",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.12",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "RET", "W"]

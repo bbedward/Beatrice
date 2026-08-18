@@ -14,14 +14,16 @@ spec:
       labels:
         app: beatrice
     spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
       - name: beatrice
         image: replaceme
-        ports:
-        - containerPort: 11337
-          name: api
-        command: ["/bin/bash", "-c"]
-        args: ["cp /config/settings.py .; python main.py"]
+        envFrom:
+          - configMapRef:
+              name: beatrice
         env:
           - name: REDIS_HOST
             value: redis.redis
@@ -32,23 +34,11 @@ spec:
               secretKeyRef:
                 name: beatrice
                 key: bot_token
-          - name: ZAPPER_API_KEY
-            valueFrom:
-              secretKeyRef:
-                name: beatrice
-                key: zapper_api_key
         volumeMounts:
-        - name: conf
-          mountPath: /config
-          readOnly: true
         - name: database
           mountPath: /database
           readOnly: false
       volumes:
-      - name: conf
-        configMap:
-          name: beatrice
-          defaultMode: 0755
       - name: database
         persistentVolumeClaim:
           claimName: database
