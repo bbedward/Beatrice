@@ -124,6 +124,11 @@ class Moderation(commands.Cog):
         banned = []
         skipped = 0
         for user_id in target_ids:
+            # Departed users have no roles to check, so the explicit admin ID
+            # list must be honored even when the member fetch fails.
+            if user_id in self.bot.settings.admin_user_ids:
+                skipped += 1
+                continue
             member = None
             try:
                 member = await guild.fetch_member(user_id)

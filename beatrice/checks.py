@@ -1,7 +1,11 @@
+import logging
+
 import discord
 from discord import app_commands
 
 from beatrice.config import Settings
+
+logger = logging.getLogger(__name__)
 
 
 def is_admin(settings: Settings, user: discord.Member | discord.User) -> bool:
@@ -13,9 +17,26 @@ def is_admin(settings: Settings, user: discord.Member | discord.User) -> bool:
 
 def admin_only():
     def predicate(interaction: discord.Interaction) -> bool:
-        return is_admin(interaction.client.settings, interaction.user)
+        if interaction.guild is None:
+            return False
+        if is_admin(interaction.client.settings, interaction.user):
+            return True
+        command = interaction.command.qualified_name if interaction.command else "?"
+        logger.warning(
+            "unauthorized admin command attempt: /%s by %s (%s) in guild %s",
+            command,
+            interaction.user,
+            interaction.user.id,
+            interaction.guild.id,
+        )
+        return False
 
+    predicate.__beatrice_admin_gate__ = True
     return app_commands.check(predicate)
+
+
+def has_admin_gate(command: app_commands.Command) -> bool:
+    return any(getattr(check, "__beatrice_admin_gate__", False) for check in command.checks)
 
 
 def outside_no_spam_channels():

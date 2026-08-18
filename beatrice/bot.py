@@ -6,6 +6,7 @@ from discord import app_commands
 from discord.ext import commands
 from redis.asyncio import Redis
 
+from beatrice.checks import has_admin_gate
 from beatrice.config import Settings
 from beatrice.store import migrate
 
@@ -22,6 +23,20 @@ EXTENSIONS = (
     "beatrice.cogs.reactions",
 )
 
+PUBLIC_COMMANDS = frozenset(
+    {
+        "price",
+        "meme",
+        "pup",
+        "meow",
+        "fridge",
+        "fodl",
+        "farms",
+        "ids",
+        "gallery list",
+    }
+)
+
 
 class Beatrice(commands.Bot):
     def __init__(self, settings: Settings, redis: Redis):
@@ -31,6 +46,7 @@ class Beatrice(commands.Bot):
             intents=intents,
             chunk_guilds_at_startup=False,
             help_command=None,
+            allowed_mentions=discord.AllowedMentions(everyone=False, roles=False, users=True),
         )
         self.settings = settings
         self.redis = redis
@@ -41,6 +57,26 @@ class Beatrice(commands.Bot):
         await asyncio.to_thread(migrate.run)
         for extension in EXTENSIONS:
             await self.load_extension(extension)
+        self._verify_admin_gates()
+
+    def _verify_admin_gates(self) -> None:
+        # Fail closed: any command not explicitly allowlisted as public must
+        # carry the admin gate, or the bot refuses to start.
+        commands_of_all_types = (
+            command
+            for command_type in discord.AppCommandType
+            for command in self.tree.walk_commands(type=command_type)
+        )
+        for command in commands_of_all_types:
+            if isinstance(command, app_commands.Group):
+                continue
+            if command.qualified_name in PUBLIC_COMMANDS:
+                continue
+            if not has_admin_gate(command):
+                raise RuntimeError(
+                    f"/{command.qualified_name} lacks the admin gate and is not "
+                    "allowlisted in PUBLIC_COMMANDS"
+                )
 
     async def on_ready(self) -> None:
         logger.info(
