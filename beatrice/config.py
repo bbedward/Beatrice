@@ -40,6 +40,7 @@ class Settings:
     reaction_purge_channel_id: int
     ves_price_enabled: bool
     redis_host: str
+    redis_password: str | None
     db_path: str
     msg_rights: str
     msg_release: str
@@ -67,6 +68,7 @@ class Settings:
             reaction_purge_channel_id=_int("REACTION_PURGE_CHANNEL_ID"),
             ves_price_enabled=_bool("VES_PRICE_ENABLED"),
             redis_host=os.environ.get("REDIS_HOST", "localhost"),
+            redis_password=os.environ.get("REDIS_PASSWORD") or None,
             db_path=os.environ.get("DB_PATH", "discord.db"),
             msg_rights=_require("MSG_RIGHTS"),
             msg_release=_require("MSG_RELEASE"),

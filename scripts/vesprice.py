@@ -5,7 +5,11 @@ import sys
 import redis
 import requests
 
-rdata = redis.StrictRedis(host=os.getenv("REDIS_HOST", "localhost"), port=6379)
+rdata = redis.StrictRedis(
+    host=os.getenv("REDIS_HOST", "localhost"),
+    port=6379,
+    password=os.getenv("REDIS_PASSWORD") or None,
+)
 
 dolartoday_price = "https://dolartoday.com/wp-admin/admin-ajax.php"
 
