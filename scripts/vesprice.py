@@ -1,9 +1,11 @@
-import json
 import os
 import sys
 
 import redis
 import requests
+
+RATES_URL = "https://open.er-api.com/v6/latest/USD"
+VES_RATE_KEY = ("prices", "usd-ves")
 
 rdata = redis.StrictRedis(
     host=os.getenv("REDIS_HOST", "localhost"),
@@ -11,32 +13,26 @@ rdata = redis.StrictRedis(
     password=os.getenv("REDIS_PASSWORD") or None,
 )
 
-dolartoday_price = "https://dolartoday.com/wp-admin/admin-ajax.php"
 
-data = {"action": "dt_currency_calculator_handler", "amount": 1}
-
-
-def dolartoday_bolivar() -> bool:
+def usd_ves_rate() -> float | None:
     try:
-        response = json.loads(requests.post(url=dolartoday_price, data=data, timeout=30).text)
+        response = requests.get(RATES_URL, timeout=30).json()
     except (requests.RequestException, ValueError) as exc:
         print(f"Request failed: {exc}")
-        return False
-    if "Dólar Bitcoin" not in response:
-        print("Invalid response " + str(response))
-        return False
-    try:
-        bolivarprice = float(response["Dólar Bitcoin"].split()[1])
-    except (AttributeError, IndexError, ValueError):
-        print("Couldn't parse price from " + str(response["Dólar Bitcoin"]))
-        return False
-    print(
-        rdata.hset("prices", "dolartoday:usd-ves", bolivarprice), "DolarToday USD-VES", bolivarprice
-    )
-    return True
+        return None
+    if not isinstance(response, dict) or response.get("result") != "success":
+        print(f"Invalid response: {response}")
+        return None
+    rate = response.get("rates", {}).get("VES")
+    if not isinstance(rate, (int, float)):
+        print("No VES rate in response")
+        return None
+    return float(rate)
 
 
-# Non-zero exit keeps the CronJob's OnFailure retry behavior for transient scrape failures.
-if not dolartoday_bolivar():
+rate = usd_ves_rate()
+# Non-zero exit keeps the CronJob's OnFailure retry behavior for transient failures.
+if rate is None:
     sys.exit(1)
-print("DolarToday USD-VES:", rdata.hget("prices", "dolartoday:usd-ves").decode("utf-8"))
+rdata.hset(*VES_RATE_KEY, rate)
+print("USD-VES:", rate)

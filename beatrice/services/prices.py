@@ -6,7 +6,7 @@ from redis.asyncio import Redis
 
 CACHE_TTL = 300
 STATUS_CACHE_KEY = "beatrice_statuscache"
-VES_RATE_KEY = ("prices", "dolartoday:usd-ves")
+VES_RATE_KEY = ("prices", "usd-ves")
 
 COINGECKO_URLS = {
     "BANANO": "https://api.coingecko.com/api/v3/coins/banano?localization=false&tickers=true&market_data=true&community_data=false&developer_data=false&sparkline=false",
